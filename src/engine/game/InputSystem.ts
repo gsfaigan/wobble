@@ -25,12 +25,13 @@ export class InputSystem {
     this.onDropCb = onDrop;
     this.onRotateCb = onRotate;
 
-    // Invisible horizontal plane at y=7 for drop-position raycasting
-    const planeGeo = new THREE.PlaneGeometry(40, 40);
+    // Invisible vertical plane at z=0 for drop-position raycasting
+    // Make it large to accommodate high towers and zoomed out camera
+    const planeGeo = new THREE.PlaneGeometry(200, 200);
     const planeMat = new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide });
     this.dropPlane = new THREE.Mesh(planeGeo, planeMat);
-    this.dropPlane.rotation.x = -Math.PI / 2;
-    this.dropPlane.position.y = 7;
+    // No rotation - plane is vertical, perpendicular to Z-axis
+    this.dropPlane.position.set(0, 0, 0);
     scene.add(this.dropPlane);
 
     window.addEventListener('mousemove', this._onMouseMove);
@@ -45,7 +46,9 @@ export class InputSystem {
     this.raycaster.setFromCamera(this.mouse, this.camera);
     const hits = this.raycaster.intersectObject(this.dropPlane);
     if (hits.length > 0) {
-      this.onMouseMoveCb(hits[0].point);
+      const point = hits[0].point.clone();
+      point.z = 0; // Force z to 0 for 2D movement
+      this.onMouseMoveCb(point);
     }
   };
 
@@ -70,7 +73,8 @@ export class InputSystem {
   setActive(active: boolean): void {
     this.active = active;
   }
-
+// Vertical plane doesn't need height adjustment - always at z=0
+    // This method can be kept for future use or removed
   setDropPlaneHeight(y: number): void {
     this.dropPlane.position.y = y;
   }

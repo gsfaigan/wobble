@@ -44,6 +44,7 @@ export class BlockFactory {
     const geo = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
     const mat = new THREE.MeshLambertMaterial({ color });
 
+    // Apply user rotation to the shape offsets for physics
     const cosR = Math.cos(rotationZ);
     const sinR = Math.sin(rotationZ);
 
@@ -51,15 +52,16 @@ export class BlockFactory {
       // Center offset
       const cx = dx - centerX;
       const cy = dy - centerY;
-      // Rotate around Z axis
+      // Apply user rotation around Z axis for physics shapes
       const rx = cx * cosR - cy * sinR;
       const ry = cx * sinR + cy * cosR;
 
       const offsetVec = new CANNON.Vec3(rx * BLOCK_SIZE, ry * BLOCK_SIZE, dz * BLOCK_SIZE);
       body.addShape(boxShape, offsetVec);
 
+      // Visual cubes without rotation - they'll be rotated by the mesh group
       const cellMesh = new THREE.Mesh(geo, mat);
-      cellMesh.position.set(rx * BLOCK_SIZE, ry * BLOCK_SIZE, dz * BLOCK_SIZE);
+      cellMesh.position.set(cx * BLOCK_SIZE, cy * BLOCK_SIZE, dz * BLOCK_SIZE);
       cellMesh.castShadow = true;
       cellMesh.receiveShadow = true;
       mesh.add(cellMesh);
@@ -67,7 +69,7 @@ export class BlockFactory {
 
     body.position.copy(position);
     
-    // Combine user rotation, 45-degree platform zigzag offset, and platform tilt
+    // Apply full rotation: user rotation + 45-degree platform zigzag offset + platform tilt
     const totalRotation = new CANNON.Quaternion();
     totalRotation.setFromEuler(0, 0, rotationZ + Math.PI / 4 + platformTilt);
     body.quaternion.copy(totalRotation);

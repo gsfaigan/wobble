@@ -114,14 +114,34 @@ export class GameManager {
   onMouseMove(pos: THREE.Vector3): void {
     if (!this.gameActive) return;
 
-    // Clamp to platform area (x-axis only, z locked to 0 for 2D movement)
-    const halfW = PLATFORM_WIDTH / 2 - 0.5;
-    pos.x = Math.max(-halfW, Math.min(halfW, pos.x));
-    pos.z = 0; // Lock z-axis to center of platform
-    pos.y = this.dropHeight;
-
-    this._mousePos.copy(pos);
-    this.ghostBlock.setPosition(pos);
+    // Lock z-axis to center of platform (2D movement)
+    pos.z = 0;
+    
+    // Store X position, height will be updated in game loop
+    this._mousePos.x = pos.x;
+    this._mousePos.z = pos.z;
+    
+    // Update ghost position with current drop height
+    this.ghostBlock.setPosition(this._mousePos);
+  }
+  
+  private calculateDropHeight(xPos: number): number {
+    const minHeight = DROP_HEIGHT;
+    const searchRadius = 2; // Search for blocks within 2 units horizontally
+    let maxY = 0;
+    
+    for (const block of this.placedBlocks) {
+      const blockX = block.body.position.x;
+      const blockY = block.body.position.y;
+      
+      // Check if block is near the cursor X position
+      if (Math.abs(blockX - xPos) < searchRadius) {
+        maxY = Math.max(maxY, blockY);
+      }
+    }
+    
+    // Drop height is either minimum or 3 units above highest block
+    return Math.max(minHeight, maxY + 3);
   }
 
   onDrop(): void {
@@ -134,17 +154,14 @@ export class GameManager {
     const spawnPos = new CANNON.Vec3(dropPos.x, dropPos.y + 0.5, dropPos.z);
     const block = this.blockFactory.createBlock(this.currentShapeKey, spawnPos, rotation, platformTilt);
 
-    // Give downward velocity
-    block.body.velocity.set(0, -4, 0);
+    // Give gentle downward velocity to avoid clipping through platform
+    block.body.velocity.set(0, -2, 0);
 
     this.placedBlocks.push(block);
     this.score += 10;
     this.ui.updateScore(this.score);
 
-    // Raise drop height and zoom camera out slightly
-    this.dropHeight = Math.min(this.dropHeight + 1.0, 28);
-    this._mousePos.y = this.dropHeight;
-    this.inputSystem.setDropPlaneHeight(this.dropHeight);
+    // Zoom camera out slightly (drop height will be recalculated in update loop)
     this.scene.nudgeOut(0.7, 0.3);
 
     this.spawnNextBlock();
@@ -165,7 +182,13 @@ export class GameManager {
     }
 
     if (this.gameActive) {
-      // Update ghost block to match platform's current tilt
+      // Update drop height continuously based on current mouse X position
+      this.dropHeight = this.calculateDropHeight(this._mousePos.x);
+      this._mousePos.y = this.dropHeight;
+      this.inputSystem.setDropPlaneHeight(this.dropHeight);
+      
+      // Update ghost block position and tilt
+      this.ghostBlock.setPosition(this._mousePos);
       this.ghostBlock.setPlatformTilt(this.platform.getTiltAngle());
       
       const result = this.gameOverDetector.check(this.platform, this.placedBlocks);
