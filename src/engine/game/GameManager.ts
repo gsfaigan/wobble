@@ -129,9 +129,10 @@ export class GameManager {
 
     const dropPos = this.ghostBlock.getDropPosition();
     const rotation = this.ghostBlock.getRotation();
+    const platformTilt = this.platform.getTiltAngle();
 
     const spawnPos = new CANNON.Vec3(dropPos.x, dropPos.y + 0.5, dropPos.z);
-    const block = this.blockFactory.createBlock(this.currentShapeKey, spawnPos, rotation);
+    const block = this.blockFactory.createBlock(this.currentShapeKey, spawnPos, rotation, platformTilt);
 
     // Give downward velocity
     block.body.velocity.set(0, -4, 0);
@@ -164,6 +165,9 @@ export class GameManager {
     }
 
     if (this.gameActive) {
+      // Update ghost block to match platform's current tilt
+      this.ghostBlock.setPlatformTilt(this.platform.getTiltAngle());
+      
       const result = this.gameOverDetector.check(this.platform, this.placedBlocks);
       if (result) {
         this.triggerGameOver(result);

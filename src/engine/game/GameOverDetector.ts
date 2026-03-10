@@ -8,7 +8,7 @@ const GROUND_THRESHOLD = BLOCK_SIZE * 0.8;
 export class GameOverDetector {
   check(platform: Platform, placedBlocks: PlacedBlock[]): string | null {
     // Check tilt
-    if (platform.getTiltAngle() > TILT_LIMIT) {
+    if (platform.getTiltAngleAbs() > TILT_LIMIT) {
       return 'tilt';
     }
 

@@ -154,7 +154,11 @@ export class Platform {
     const sinz_cosp = 2 * (q.w * q.z + q.x * q.y);
     const cosz_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
     const zAngle = Math.atan2(sinz_cosp, cosz_cosp);
-    return Math.abs(zAngle);
+    return zAngle; // Return signed angle for block alignment
+  }
+  
+  getTiltAngleAbs(): number {
+    return Math.abs(this.getTiltAngle());
   }
 
   syncMesh(): void {

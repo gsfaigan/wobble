@@ -24,7 +24,8 @@ export class BlockFactory {
   createBlock(
     shapeKey: string,
     position: CANNON.Vec3,
-    rotationZ: number = 0
+    rotationZ: number = 0,
+    platformTilt: number = 0
   ): PlacedBlock {
     const offsets = SHAPES[shapeKey];
     const color = COLORS[shapeKey];
@@ -66,10 +67,10 @@ export class BlockFactory {
 
     body.position.copy(position);
     
-    // Apply 45-degree rotation around Z-axis
-    const zRotation = new CANNON.Quaternion();
-    zRotation.setFromEuler(0, 0, Math.PI / 4);
-    body.quaternion.copy(zRotation);
+    // Combine user rotation, 45-degree platform zigzag offset, and platform tilt
+    const totalRotation = new CANNON.Quaternion();
+    totalRotation.setFromEuler(0, 0, rotationZ + Math.PI / 4 + platformTilt);
+    body.quaternion.copy(totalRotation);
     
     this.physicsWorld.addBody(body);
     this.scene.add(mesh);

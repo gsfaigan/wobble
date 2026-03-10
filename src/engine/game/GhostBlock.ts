@@ -5,6 +5,7 @@ export class GhostBlock {
   mesh: THREE.Group;
   currentShape: string = 'I';
   rotationZ: number = 0; // radians: 0, π/2, π, 3π/2 around Z-axis
+  platformTilt: number = 0; // current platform tilt angle
 
   private scene: THREE.Scene;
   private _pos: THREE.Vector3 = new THREE.Vector3();
@@ -53,13 +54,22 @@ export class GhostBlock {
       this.mesh.add(cell);
     }
     
-    // Apply 45-degree rotation around Z-axis to match dropped blocks
-    this.mesh.rotation.z = Math.PI / 4;
+    this._updateRotation();
+  }
+  
+  private _updateRotation(): void {
+    // Apply user rotation, 45-degree platform offset, and current platform tilt
+    this.mesh.rotation.z = this.rotationZ + Math.PI / 4 + this.platformTilt;
   }
 
   setPosition(worldPos: THREE.Vector3): void {
     this._pos.copy(worldPos);
     this.mesh.position.copy(worldPos);
+  }
+  
+  setPlatformTilt(tilt: number): void {
+    this.platformTilt = tilt;
+    this._updateRotation();
   }
 
   rotateStep(): void {
