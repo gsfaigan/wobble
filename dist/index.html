@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TetraBalance</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #1a1a2e; }
+    #game-canvas { display: block; width: 100vw; height: 100vh; }
+    #ui-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+    }
+    #hud {
+      position: absolute;
+      top: 16px; left: 16px;
+      background: rgba(0,0,0,0.5);
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+    #message {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-size: 36px;
+      font-weight: bold;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+      display: none;
+    }
+    #restart-btn {
+      pointer-events: all;
+      margin-top: 16px;
+      padding: 12px 32px;
+      font-size: 20px;
+      background: #e040fb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none;
+    }
+    #restart-btn:hover { background: #c000d0; }
+    #controls-hint {
+      position: absolute;
+      bottom: 16px; right: 16px;
+      background: rgba(0,0,0,0.5);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #ccc;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/index-BxEWDKSa.js"></script>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+  <div id="ui-overlay">
+    <div id="hud">
+      <div>Score: <span id="score-val">0</span></div>
+      <div>Blocks: <span id="turns-val">0</span></div>
+    </div>
+    <div id="message">
+      <div id="message-text"></div>
+      <button id="restart-btn">Restart</button>
+    </div>
+    <div id="controls-hint">
+      Click – drop block<br>
+      R / ↑ – rotate<br>
+      Space – drop
+    </div>
+  </div>
+</body>
+</html>
