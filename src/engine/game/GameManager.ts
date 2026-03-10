@@ -114,11 +114,10 @@ export class GameManager {
   onMouseMove(pos: THREE.Vector3): void {
     if (!this.gameActive) return;
 
-    // Clamp to platform area
+    // Clamp to platform area (x-axis only, z locked to 0 for 2D movement)
     const halfW = PLATFORM_WIDTH / 2 - 0.5;
-    const halfD = PLATFORM_DEPTH / 2 - 0.5;
     pos.x = Math.max(-halfW, Math.min(halfW, pos.x));
-    pos.z = Math.max(-halfD, Math.min(halfD, pos.z));
+    pos.z = 0; // Lock z-axis to center of platform
     pos.y = this.dropHeight;
 
     this._mousePos.copy(pos);

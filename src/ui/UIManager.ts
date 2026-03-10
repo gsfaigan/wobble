@@ -25,7 +25,7 @@ export class UIManager {
     const msg = reason === 'tilt'
       ? 'Platform tipped over!'
       : 'A block hit the ground!';
-    this.messageTextEl.textContent = `Game Over — ${msg}`;
+    this.messageTextEl.textContent = `Game Over. ${msg}`;
     this.messageEl.style.display = 'block';
     this.restartBtn.style.display = 'inline-block';
   }

@@ -6,6 +6,7 @@ import {
   PLATFORM_HEIGHT,
   PLATFORM_DEPTH,
   ROCKER_RADIUS,
+  BLOCK_SIZE,
   COL_GROUND,
   COL_BLOCK,
   COL_PLATFORM,
@@ -17,6 +18,11 @@ export class Platform {
   mesh: THREE.Group;
 
   private physicsWorld: PhysicsWorld;
+  
+  // Zigzag platform parameters - edit these to adjust the platform shape
+  private readonly xSpacing = BLOCK_SIZE * Math.sqrt(2)/2; // Horizontal spacing between segments
+  private readonly numSegments = Math.ceil(PLATFORM_WIDTH / this.xSpacing); // Fill full width
+  private readonly zigzagOffset = BLOCK_SIZE / Math.sqrt(2); // Vertical offset between segments
 
   constructor(scene: THREE.Scene, physicsWorld: PhysicsWorld) {
     this.physicsWorld = physicsWorld;
@@ -41,13 +47,31 @@ export class Platform {
     physicsWorld.addBody(this.pivotBody);
 
     // Platform board — center sits at ROCKER_RADIUS + half-height so arc bottom touches y=0
-    const platformY = ROCKER_RADIUS + PLATFORM_HEIGHT / 2;
+    // Create zigzag pattern with alternating y-positions (up-down along x-axis)
+    const platformY = ROCKER_RADIUS + BLOCK_SIZE / 2;
     this.platformBody = new CANNON.Body({ mass: 5 });
-    this.platformBody.addShape(
-      new CANNON.Box(
-        new CANNON.Vec3(PLATFORM_WIDTH / 2, PLATFORM_HEIGHT / 2, PLATFORM_DEPTH / 2)
-      )
-    );
+    
+    // Quaternions for alternating 45 degree rotations around z-axis
+    const rotation45CW = new CANNON.Quaternion();
+    rotation45CW.setFromEuler(0, 0, Math.PI / 4);
+    const rotation45CCW = new CANNON.Quaternion();
+    rotation45CCW.setFromEuler(0, 0, -Math.PI / 4);
+    
+    // Center the zigzag on the platform
+    const totalWidth = (this.numSegments - 1) * this.xSpacing;
+    const startX = -totalWidth / 2;
+    
+    for (let i = 0; i < this.numSegments; i++) {
+      const xPos = startX + i * this.xSpacing;
+      const yPos = (i % 2 === 0) ? -this.zigzagOffset / 2 : this.zigzagOffset / 2;
+      const rotation = (i % 2 === 0) ? rotation45CW : rotation45CCW;
+      
+      const segmentShape = new CANNON.Box(
+        new CANNON.Vec3(BLOCK_SIZE / 2, BLOCK_SIZE / 2, BLOCK_SIZE / 2)
+      );
+      this.platformBody.addShape(segmentShape, new CANNON.Vec3(xPos, yPos, 0), rotation);
+    }
+    
     this.platformBody.position.set(0, platformY, 0);
     this.platformBody.linearDamping = 0.6;
     this.platformBody.angularDamping = 0.95;
@@ -70,19 +94,32 @@ export class Platform {
   }
 
   private _buildMesh(scene: THREE.Scene): void {
-    // Platform board
-    const boardGeo = new THREE.BoxGeometry(PLATFORM_WIDTH, PLATFORM_HEIGHT, PLATFORM_DEPTH);
+    // Platform board - zigzag pattern (up-down along x-axis)
+    const segmentGeo = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
     const boardMat = new THREE.MeshLambertMaterial({ color: 0x334455 });
-    const boardMesh = new THREE.Mesh(boardGeo, boardMat);
-    boardMesh.receiveShadow = true;
-    boardMesh.castShadow = true;
-    this.mesh.add(boardMesh);
-
-    // Edge highlights
-    const edgeGeo = new THREE.EdgesGeometry(boardGeo);
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0x6688aa });
-    const edges = new THREE.LineSegments(edgeGeo, edgeMat);
-    boardMesh.add(edges);
+    
+    // Center the zigzag on the platform
+    const totalWidth = (this.numSegments - 1) * this.xSpacing;
+    const startX = -totalWidth / 2;
+    
+    for (let i = 0; i < this.numSegments; i++) {
+      const xPos = startX + i * this.xSpacing;
+      const yPos = (i % 2 === 0) ? -this.zigzagOffset / 2 : this.zigzagOffset / 2;
+      const rotationZ = (i % 2 === 0) ? Math.PI / 4 : -Math.PI / 4; // Alternate rotation direction
+      
+      const segmentMesh = new THREE.Mesh(segmentGeo, boardMat);
+      segmentMesh.position.set(xPos, yPos, 0);
+      segmentMesh.rotation.z = rotationZ;
+      segmentMesh.receiveShadow = true;
+      segmentMesh.castShadow = true;
+      this.mesh.add(segmentMesh);
+      
+      // Edge highlights for each segment
+      const edgeGeo = new THREE.EdgesGeometry(segmentGeo);
+      const edgeMat = new THREE.LineBasicMaterial({ color: 0x6688aa });
+      const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+      segmentMesh.add(edges);
+    }
 
     // Rocker base (visual only) — half-cylinder with curved side down
     // phiStart=-PI/2 + rotation.x=PI/2 → arc runs from -X through bottom(-Y) to +X
