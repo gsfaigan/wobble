@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 
-const INIT_CAM_Y = 12;
-const INIT_CAM_Z = 14;
-const MAX_CAM_Y = 22;
-const MAX_CAM_Z = 28;
+const INIT_CAM_Y = 15;
+const INIT_CAM_Z = 25;
+const MAX_CAM_Y = 60;
+const MAX_CAM_Z = 60;
 
 export class SceneManager {
   scene: THREE.Scene;
