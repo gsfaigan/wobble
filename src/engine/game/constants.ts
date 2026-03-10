@@ -1,7 +1,7 @@
 export const BLOCK_SIZE = 1;
 export const TILT_LIMIT = Math.PI / 4; // 45°
 export const BLOCK_MASS = 1;
-export const PLATFORM_WIDTH = 10;
+export const PLATFORM_WIDTH = 20;
 export const PLATFORM_DEPTH = 0.5;
 export const PLATFORM_HEIGHT = 0.9;
 export const ROCKER_RADIUS = 3.6;

@@ -12,11 +12,12 @@ export class SceneManager {
 
   private targetY: number = INIT_CAM_Y;
   private targetZ: number = INIT_CAM_Z;
+  private clouds: { mesh: THREE.Group; speed: number }[] = [];
 
   constructor(canvas: HTMLCanvasElement) {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x1a1a2e);
-    this.scene.fog = new THREE.Fog(0x1a1a2e, 30, 60);
+    this.scene.background = new THREE.Color(0x87CEEB); // Sky blue
+    this.scene.fog = new THREE.Fog(0x87CEEB, 40, 120); // Blue fog starting closer for better visibility
 
     this.camera = new THREE.PerspectiveCamera(
       55,
@@ -51,6 +52,55 @@ export class SceneManager {
     const fillLight = new THREE.DirectionalLight(0x8888ff, 0.3);
     fillLight.position.set(-6, 4, -6);
     this.scene.add(fillLight);
+
+    // Add clouds
+    this._createClouds();
+  }
+
+  private _createClouds(): void {
+    const cloudMaterial = new THREE.MeshLambertMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.75,
+      depthWrite: false
+    });
+
+    for (let i = 0; i < 20; i++) {
+      const cloud = new THREE.Group();
+      const numPuffs = 3 + Math.floor(Math.random() * 4);
+
+      for (let j = 0; j < numPuffs; j++) {
+        const puffSize = 3 + Math.random() * 4;
+        const puffGeo = new THREE.SphereGeometry(puffSize, 7, 7);
+        const puff = new THREE.Mesh(puffGeo, cloudMaterial);
+        puff.position.set(
+          (Math.random() - 0.5) * 10,
+          (Math.random() - 0.5) * 2,
+          (Math.random() - 0.5) * 4
+        );
+        cloud.add(puff);
+      }
+
+      cloud.position.set(
+        (Math.random() - 0.5) * 160,
+        8 + Math.random() * 8,
+        -10 - Math.random() * 40
+      );
+
+      const speed = 1.5 + Math.random() * 2.5; // units per second
+      this.clouds.push({ mesh: cloud, speed });
+      this.scene.add(cloud);
+    }
+  }
+
+  updateClouds(dt: number): void {
+    for (const cloud of this.clouds) {
+      cloud.mesh.position.x += cloud.speed * dt;
+      // Wrap around when cloud drifts too far right
+      if (cloud.mesh.position.x > 90) {
+        cloud.mesh.position.x = -90;
+      }
+    }
   }
 
   /** Nudge the camera target outward by dz (back) and dy (up). */

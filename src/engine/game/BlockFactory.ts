@@ -10,7 +10,6 @@ export interface PlacedBlock {
 }
 
 const halfExt = new CANNON.Vec3(BLOCK_SIZE / 2, BLOCK_SIZE / 2, BLOCK_SIZE / 2);
-const boxShape = new CANNON.Box(halfExt);
 
 export class BlockFactory {
   private scene: THREE.Scene;
@@ -44,20 +43,13 @@ export class BlockFactory {
     const geo = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
     const mat = new THREE.MeshLambertMaterial({ color });
 
-    // Apply user rotation to the shape offsets for physics
-    const cosR = Math.cos(rotationZ);
-    const sinR = Math.sin(rotationZ);
-
     for (const [dx, dy, dz] of offsets) {
-      // Center offset
+      // Center offset — kept unrotated; body quaternion handles all rotation
       const cx = dx - centerX;
       const cy = dy - centerY;
-      // Apply user rotation around Z axis for physics shapes
-      const rx = cx * cosR - cy * sinR;
-      const ry = cx * sinR + cy * cosR;
 
-      const offsetVec = new CANNON.Vec3(rx * BLOCK_SIZE, ry * BLOCK_SIZE, dz * BLOCK_SIZE);
-      body.addShape(boxShape, offsetVec);
+      const offsetVec = new CANNON.Vec3(cx * BLOCK_SIZE, cy * BLOCK_SIZE, dz * BLOCK_SIZE);
+      body.addShape(new CANNON.Box(halfExt), offsetVec);
 
       // Visual cubes without rotation - they'll be rotated by the mesh group
       const cellMesh = new THREE.Mesh(geo, mat);

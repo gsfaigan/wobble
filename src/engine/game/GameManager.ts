@@ -130,6 +130,7 @@ export class GameManager {
     const searchRadius = 2; // Search for blocks within 2 units horizontally
     let maxY = 0;
     
+    // Check placed blocks
     for (const block of this.placedBlocks) {
       const blockX = block.body.position.x;
       const blockY = block.body.position.y;
@@ -140,7 +141,25 @@ export class GameManager {
       }
     }
     
-    // Drop height is either minimum or 3 units above highest block
+    // Calculate platform height at this x position accounting for rotation
+    const tiltAngle = this.platform.getTiltAngle();
+    const rockerRadius = 3.6; // ROCKER_RADIUS
+    const blockSize = 1; // BLOCK_SIZE
+    const platformCenterY = rockerRadius + blockSize / 2;
+    
+    // Height of platform center at position x when tilted around pivot at origin
+    // The platform rotates around the bottom (pivot at y=0), so we need to calculate
+    // the height of a point at horizontal offset xPos from center
+    const platformCenterAtX = platformCenterY * Math.cos(tiltAngle) + xPos * Math.sin(tiltAngle);
+    
+    // Add clearance for the rotated block segments on the platform
+    // When tilted, the diagonal of the rotated cube extends higher
+    const platformTopAtX = platformCenterAtX + blockSize * 0.7;
+    
+    // Use the higher of blocks or platform
+    maxY = Math.max(maxY, platformTopAtX);
+    
+    // Drop height is either minimum or 3 units above highest point
     return Math.max(minHeight, maxY + 3);
   }
 
@@ -161,6 +180,11 @@ export class GameManager {
     this.score += 10;
     this.ui.updateScore(this.score);
 
+    // Unlock platform rotation once enough weight is on it (minimum 3 blocks)
+    if (this.platform.isRotationLocked() && this.placedBlocks.length >= 3) {
+      this.platform.unlockRotation();
+    }
+
     // Zoom camera out slightly (drop height will be recalculated in update loop)
     this.scene.nudgeOut(0.7, 0.3);
 
@@ -174,8 +198,10 @@ export class GameManager {
 
   update(dt: number): void {
     this.physics.step(dt);
+    this.platform.update(); // Apply rotation lock if active
     this.platform.syncMesh();
     this.scene.updateCamera(dt);
+    this.scene.updateClouds(dt);
 
     for (const block of this.placedBlocks) {
       this.blockFactory.syncMeshToBody(block);
