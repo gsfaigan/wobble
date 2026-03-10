@@ -1,9 +1,17 @@
 import * as THREE from 'three';
 
+const INIT_CAM_Y = 12;
+const INIT_CAM_Z = 14;
+const MAX_CAM_Y = 22;
+const MAX_CAM_Z = 28;
+
 export class SceneManager {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
+
+  private targetY: number = INIT_CAM_Y;
+  private targetZ: number = INIT_CAM_Z;
 
   constructor(canvas: HTMLCanvasElement) {
     this.scene = new THREE.Scene();
@@ -16,7 +24,7 @@ export class SceneManager {
       0.1,
       100
     );
-    this.camera.position.set(0, 12, 14);
+    this.camera.position.set(0, INIT_CAM_Y, INIT_CAM_Z);
     this.camera.lookAt(0, 1, 0);
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -25,11 +33,9 @@ export class SceneManager {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // Ambient light
     const ambient = new THREE.AmbientLight(0xffffff, 0.5);
     this.scene.add(ambient);
 
-    // Main directional light
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
     dirLight.position.set(8, 16, 8);
     dirLight.castShadow = true;
@@ -42,10 +48,30 @@ export class SceneManager {
     dirLight.shadow.camera.bottom = -12;
     this.scene.add(dirLight);
 
-    // Fill light
     const fillLight = new THREE.DirectionalLight(0x8888ff, 0.3);
     fillLight.position.set(-6, 4, -6);
     this.scene.add(fillLight);
+  }
+
+  /** Nudge the camera target outward by dz (back) and dy (up). */
+  nudgeOut(dz: number, dy: number): void {
+    this.targetZ = Math.min(this.targetZ + dz, MAX_CAM_Z);
+    this.targetY = Math.min(this.targetY + dy, MAX_CAM_Y);
+  }
+
+  resetCamera(): void {
+    this.targetZ = INIT_CAM_Z;
+    this.targetY = INIT_CAM_Y;
+    this.camera.position.set(0, INIT_CAM_Y, INIT_CAM_Z);
+  }
+
+  /** Call each frame — eases camera toward target. */
+  updateCamera(dt: number): void {
+    // Frame-rate-independent lerp: ~90% of the way in 0.25 s
+    const alpha = 1 - Math.pow(0.01, dt * 4);
+    this.camera.position.z += (this.targetZ - this.camera.position.z) * alpha;
+    this.camera.position.y += (this.targetY - this.camera.position.y) * alpha;
+    this.camera.lookAt(0, 3, 0);
   }
 
   render(): void {

@@ -71,6 +71,10 @@ export class InputSystem {
     this.active = active;
   }
 
+  setDropPlaneHeight(y: number): void {
+    this.dropPlane.position.y = y;
+  }
+
   dispose(): void {
     window.removeEventListener('mousemove', this._onMouseMove);
     window.removeEventListener('click', this._onClick);

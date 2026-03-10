@@ -25,6 +25,7 @@ export class GameManager {
   private turns: number = 0;
   private gameActive: boolean = false;
   private currentShapeKey: string = 'I';
+  private dropHeight: number = DROP_HEIGHT;
 
   private lastTime: number = 0;
   private _mousePos: THREE.Vector3 = new THREE.Vector3(0, DROP_HEIGHT, 0);
@@ -68,9 +69,13 @@ export class GameManager {
     // Reset score
     this.score = 0;
     this.turns = 0;
+    this.dropHeight = DROP_HEIGHT;
+    this._mousePos.y = DROP_HEIGHT;
     this.ui.updateScore(0);
     this.ui.updateTurns(0);
     this.ui.hideGameOver();
+    this.scene.resetCamera();
+    this.inputSystem.setDropPlaneHeight(DROP_HEIGHT);
 
     // Rebuild physics/platform if restarting
     if (this.platform) {
@@ -114,7 +119,7 @@ export class GameManager {
     const halfD = PLATFORM_DEPTH / 2 - 0.5;
     pos.x = Math.max(-halfW, Math.min(halfW, pos.x));
     pos.z = Math.max(-halfD, Math.min(halfD, pos.z));
-    pos.y = DROP_HEIGHT;
+    pos.y = this.dropHeight;
 
     this._mousePos.copy(pos);
     this.ghostBlock.setPosition(pos);
@@ -136,6 +141,12 @@ export class GameManager {
     this.score += 10;
     this.ui.updateScore(this.score);
 
+    // Raise drop height and zoom camera out slightly
+    this.dropHeight = Math.min(this.dropHeight + 1.0, 28);
+    this._mousePos.y = this.dropHeight;
+    this.inputSystem.setDropPlaneHeight(this.dropHeight);
+    this.scene.nudgeOut(0.7, 0.3);
+
     this.spawnNextBlock();
   }
 
@@ -147,6 +158,7 @@ export class GameManager {
   update(dt: number): void {
     this.physics.step(dt);
     this.platform.syncMesh();
+    this.scene.updateCamera(dt);
 
     for (const block of this.placedBlocks) {
       this.blockFactory.syncMeshToBody(block);
