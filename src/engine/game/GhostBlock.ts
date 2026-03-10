@@ -4,7 +4,7 @@ import { BLOCK_SIZE, SHAPES, COLORS } from './constants';
 export class GhostBlock {
   mesh: THREE.Group;
   currentShape: string = 'I';
-  rotationY: number = 0; // radians: 0, π/2, π, 3π/2
+  rotationZ: number = 0; // radians: 0, π/2, π, 3π/2 around Z-axis
 
   private scene: THREE.Scene;
   private _pos: THREE.Vector3 = new THREE.Vector3();
@@ -37,20 +37,24 @@ export class GhostBlock {
     });
 
     const centerX = offsets.reduce((s, o) => s + o[0], 0) / offsets.length;
-    const centerZ = offsets.reduce((s, o) => s + o[2], 0) / offsets.length;
-    const cosR = Math.cos(this.rotationY);
-    const sinR = Math.sin(this.rotationY);
+    const centerY = offsets.reduce((s, o) => s + o[1], 0) / offsets.length;
+    const cosR = Math.cos(this.rotationZ);
+    const sinR = Math.sin(this.rotationZ);
 
     for (const [dx, dy, dz] of offsets) {
       const cx = dx - centerX;
-      const cz = dz - centerZ;
-      const rx = cx * cosR - cz * sinR;
-      const rz = cx * sinR + cz * cosR;
+      const cy = dy - centerY;
+      // Rotate around Z-axis
+      const rx = cx * cosR - cy * sinR;
+      const ry = cx * sinR + cy * cosR;
 
       const cell = new THREE.Mesh(geo, mat);
-      cell.position.set(rx * BLOCK_SIZE, dy * BLOCK_SIZE, rz * BLOCK_SIZE);
+      cell.position.set(rx * BLOCK_SIZE, ry * BLOCK_SIZE, dz * BLOCK_SIZE);
       this.mesh.add(cell);
     }
+    
+    // Apply 45-degree rotation around Z-axis to match dropped blocks
+    this.mesh.rotation.z = Math.PI / 4;
   }
 
   setPosition(worldPos: THREE.Vector3): void {
@@ -59,7 +63,7 @@ export class GhostBlock {
   }
 
   rotateStep(): void {
-    this.rotationY = (this.rotationY + Math.PI / 2) % (Math.PI * 2);
+    this.rotationZ = (this.rotationZ + Math.PI / 2) % (Math.PI * 2);
     this._rebuild();
   }
 
@@ -68,7 +72,7 @@ export class GhostBlock {
   }
 
   getRotation(): number {
-    return this.rotationY;
+    return this.rotationZ;
   }
 
   setVisible(v: boolean): void {

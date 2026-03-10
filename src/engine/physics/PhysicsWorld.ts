@@ -9,6 +9,10 @@ export class PhysicsWorld {
     this.world.broadphase = new CANNON.NaiveBroadphase();
     (this.world.solver as CANNON.GSSolver).iterations = 10;
     this.world.allowSleep = true;
+    
+    // Set default contact material with low friction
+    this.world.defaultContactMaterial.friction = 0.1;
+    this.world.defaultContactMaterial.restitution = 0.3;
   }
 
   step(dt: number): void {

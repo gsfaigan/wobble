@@ -24,14 +24,14 @@ export class BlockFactory {
   createBlock(
     shapeKey: string,
     position: CANNON.Vec3,
-    rotationY: number = 0
+    rotationZ: number = 0
   ): PlacedBlock {
     const offsets = SHAPES[shapeKey];
     const color = COLORS[shapeKey];
 
     // Center the shape around (0,0)
     const centerX = offsets.reduce((s, o) => s + o[0], 0) / offsets.length;
-    const centerZ = offsets.reduce((s, o) => s + o[2], 0) / offsets.length;
+    const centerY = offsets.reduce((s, o) => s + o[1], 0) / offsets.length;
 
     const body = new CANNON.Body({ mass: BLOCK_MASS });
     body.sleepSpeedLimit = 0.5;
@@ -43,28 +43,34 @@ export class BlockFactory {
     const geo = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
     const mat = new THREE.MeshLambertMaterial({ color });
 
-    const cosR = Math.cos(rotationY);
-    const sinR = Math.sin(rotationY);
+    const cosR = Math.cos(rotationZ);
+    const sinR = Math.sin(rotationZ);
 
     for (const [dx, dy, dz] of offsets) {
       // Center offset
       const cx = dx - centerX;
-      const cz = dz - centerZ;
-      // Rotate around Y axis
-      const rx = cx * cosR - cz * sinR;
-      const rz = cx * sinR + cz * cosR;
+      const cy = dy - centerY;
+      // Rotate around Z axis
+      const rx = cx * cosR - cy * sinR;
+      const ry = cx * sinR + cy * cosR;
 
-      const offsetVec = new CANNON.Vec3(rx * BLOCK_SIZE, dy * BLOCK_SIZE, rz * BLOCK_SIZE);
+      const offsetVec = new CANNON.Vec3(rx * BLOCK_SIZE, ry * BLOCK_SIZE, dz * BLOCK_SIZE);
       body.addShape(boxShape, offsetVec);
 
       const cellMesh = new THREE.Mesh(geo, mat);
-      cellMesh.position.set(rx * BLOCK_SIZE, dy * BLOCK_SIZE, rz * BLOCK_SIZE);
+      cellMesh.position.set(rx * BLOCK_SIZE, ry * BLOCK_SIZE, dz * BLOCK_SIZE);
       cellMesh.castShadow = true;
       cellMesh.receiveShadow = true;
       mesh.add(cellMesh);
     }
 
     body.position.copy(position);
+    
+    // Apply 45-degree rotation around Z-axis
+    const zRotation = new CANNON.Quaternion();
+    zRotation.setFromEuler(0, 0, Math.PI / 4);
+    body.quaternion.copy(zRotation);
+    
     this.physicsWorld.addBody(body);
     this.scene.add(mesh);
 
