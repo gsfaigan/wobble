@@ -39,18 +39,13 @@ export class GhostBlock {
 
     const centerX = offsets.reduce((s, o) => s + o[0], 0) / offsets.length;
     const centerY = offsets.reduce((s, o) => s + o[1], 0) / offsets.length;
-    const cosR = Math.cos(this.rotationZ);
-    const sinR = Math.sin(this.rotationZ);
 
     for (const [dx, dy, dz] of offsets) {
       const cx = dx - centerX;
       const cy = dy - centerY;
-      // Rotate around Z-axis
-      const rx = cx * cosR - cy * sinR;
-      const ry = cx * sinR + cy * cosR;
 
       const cell = new THREE.Mesh(geo, mat);
-      cell.position.set(rx * BLOCK_SIZE, ry * BLOCK_SIZE, dz * BLOCK_SIZE);
+      cell.position.set(cx * BLOCK_SIZE, cy * BLOCK_SIZE, dz * BLOCK_SIZE);
       this.mesh.add(cell);
     }
     
