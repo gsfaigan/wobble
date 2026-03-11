@@ -46,7 +46,10 @@ export class SceneManager {
     const ambient = new THREE.AmbientLight(0xffffff, 0.5);
     this.scene.add(ambient);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.15;
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
     dirLight.position.set(8, 16, 8);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.set(2048, 2048);

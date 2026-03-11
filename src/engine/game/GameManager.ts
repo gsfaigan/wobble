@@ -23,7 +23,7 @@ export class GameManager {
   private audio: AudioManager = new AudioManager('/music.mp3');
 
   private placedBlocks: PlacedBlock[] = [];
-  private dropXPositions: number[] = [];
+  private _netDropX: number = 0;
   private score: number = 0;
   private turns: number = 0;
   private gameActive: boolean = false;
@@ -34,6 +34,8 @@ export class GameManager {
   private lastTime: number = 0;
   private lastDropTime: number = 0;
   private readonly DROP_COOLDOWN_MS = 600;
+  private _blockSpawnTime: number = 0;
+  private readonly PLACE_TIMEOUT_MS = 20000;
   private _mousePos: THREE.Vector3 = new THREE.Vector3(0, DROP_HEIGHT, 0);
   private _rafId: number = 0;
 
@@ -81,6 +83,7 @@ export class GameManager {
     this.gameActive = true;
     this.ghostBlock.setVisible(!InputSystem.isTouchDevice());
     this.inputSystem.setActive(true);
+    this.ui.showTimer();
     this.spawnNextBlock();
   }
 
@@ -90,7 +93,7 @@ export class GameManager {
       this.scene.scene.remove(block.mesh);
     }
     this.placedBlocks = [];
-    this.dropXPositions = [];
+    this._netDropX = 0;
 
     // Reset score
     this.score = 0;
@@ -110,10 +113,10 @@ export class GameManager {
     this.platform = new Platform(this.scene.scene, this.physics);
     this.blockFactory = new BlockFactory(this.scene.scene, this.physics);
 
-    // Trigger game over the moment any block contacts the ground
+    // Explosion when any block hits the ground
     this.platform.groundBody.addEventListener('collide', (e: any) => {
       if (this.gameActive && e.body.collisionFilterGroup === COL_BLOCK) {
-        this.triggerGameOver('grounded');
+        this._triggerExplosion('grounded');
       }
     });
 
@@ -127,6 +130,8 @@ export class GameManager {
     this.inputSystem.setActive(true);
     this.inputSystem.setDropPlaneHeight(DROP_HEIGHT);
 
+    this.ui.showTimer();
+    this.ui.updateTimer(this.PLACE_TIMEOUT_MS);
     this.spawnNextBlock();
 
     if (this._firstRun) {
@@ -134,6 +139,7 @@ export class GameManager {
       this.gameActive = false;
       this.ghostBlock.setVisible(false);
       this.inputSystem.setActive(false);
+      this.ui.hideTimer();
     }
 
     cancelAnimationFrame(this._rafId);
@@ -146,6 +152,7 @@ export class GameManager {
     this.ghostBlock.setShape(this.currentShapeKey);
     this.ghostBlock.setPosition(this._mousePos);
     this.turns++;
+    this._blockSpawnTime = performance.now();
   }
 
   onMouseMove(pos: THREE.Vector3): void {
@@ -225,7 +232,7 @@ export class GameManager {
       const now = performance.now();
       if (!landed) {
         landed = true;
-        this.dropXPositions.push(spawnPos.x);
+        this._netDropX += spawnPos.x;
         this.platform.nudgeTilt(block.body.position.x);
       }
       if (now - lastHit < 120) return;
@@ -259,10 +266,9 @@ export class GameManager {
     this.platform.update(); // Apply rotation lock if active
 
     // Drive platform tilt based on stable drop positions (not drifting physics positions)
-    if (this.dropXPositions.length > 0) {
-      const netDropX = this.dropXPositions.reduce((s, x) => s + x, 0);
+    if (this._netDropX !== 0) {
       const targetAngle = Math.max(-Math.PI / 4 + 0.05, Math.min(Math.PI / 4 - 0.05,
-        -netDropX * 0.015
+        -this._netDropX * 0.015
       ));
       this.platform.driveTowardAngle(targetAngle);
     }
@@ -284,11 +290,40 @@ export class GameManager {
       this.ghostBlock.setPosition(this._mousePos);
       this.ghostBlock.setPlatformTilt(this.platform.getTiltAngle());
       
+      const timeLeft = Math.max(0, this.PLACE_TIMEOUT_MS - (performance.now() - this._blockSpawnTime));
+      this.ui.updateTimer(timeLeft);
+      if (timeLeft === 0) {
+        this._triggerExplosion('timeout');
+      }
       const result = this.gameOverDetector.check(this.platform, this.placedBlocks);
       if (result) {
-        this.triggerGameOver(result);
+        this._triggerExplosion(result);
       }
     }
+  }
+
+  private _triggerExplosion(reason: string): void {
+    if (!this.gameActive) return;
+    this.gameActive = false;
+    this.inputSystem.setActive(false);
+    this.ghostBlock.setVisible(false);
+    this.ui.hideTimer();
+
+    for (const block of this.placedBlocks) {
+      // Unlock full 3-axis movement so blocks can fly freely
+      block.body.linearFactor.set(1, 1, 1);
+      block.body.angularFactor.set(1, 1, 1);
+      block.body.applyImpulse(
+        new CANNON.Vec3(
+          (Math.random() - 0.5) * 30,
+          Math.random() * 20 + 10,
+          (Math.random() - 0.5) * 15,
+        ),
+        new CANNON.Vec3(0, 0, 0),
+      );
+    }
+
+    setTimeout(() => this.ui.showGameOver(reason), 2200);
   }
 
   triggerGameOver(reason: string): void {

@@ -59,6 +59,51 @@
       text-shadow: 0 0 16px rgba(255,255,255,0.25);
     }
 
+    /* ── Timer ── */
+    #timer-card { padding: 8px 14px 10px; min-width: 0; }
+
+    #timer-wrap {
+      position: relative;
+      width: 64px;
+      height: 64px;
+    }
+
+    #timer-svg {
+      width: 64px;
+      height: 64px;
+      transform: rotate(-90deg);
+    }
+
+    .timer-track {
+      fill: none;
+      stroke: rgba(255,255,255,0.1);
+      stroke-width: 3.5;
+    }
+
+    #timer-ring {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-dasharray: 163.36;
+      stroke-dashoffset: 0;
+      transition: stroke 0.4s ease;
+    }
+
+    #timer-val {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      text-shadow: 0 0 10px rgba(255,255,255,0.25);
+      transition: color 0.4s ease;
+    }
+
     /* ── Game Over overlay ── */
     #game-over-overlay {
       position: absolute;
@@ -424,6 +469,16 @@
       <div class="hud-card">
         <div class="hud-label">Score</div>
         <div class="hud-value" id="score-val">0</div>
+      </div>
+      <div class="hud-card" id="timer-card" style="display:none;">
+        <div class="hud-label">Time</div>
+        <div id="timer-wrap">
+          <svg id="timer-svg" viewBox="0 0 64 64">
+            <circle class="timer-track" cx="32" cy="32" r="26"/>
+            <circle id="timer-ring" cx="32" cy="32" r="26"/>
+          </svg>
+          <div id="timer-val">20</div>
+        </div>
       </div>
     </div>
 

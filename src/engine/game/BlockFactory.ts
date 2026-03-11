@@ -3,6 +3,7 @@ import * as CANNON from 'cannon-es';
 import { PhysicsWorld } from '../physics/PhysicsWorld';
 import { BLOCK_MASS, BLOCK_SIZE, SHAPES, COLORS, COL_BLOCK, COL_GROUND, COL_PLATFORM } from './constants';
 
+
 export interface PlacedBlock {
   body: CANNON.Body;
   mesh: THREE.Group;
@@ -10,6 +11,22 @@ export interface PlacedBlock {
 }
 
 const halfExt = new CANNON.Vec3(BLOCK_SIZE / 2, BLOCK_SIZE / 2, BLOCK_SIZE / 2);
+
+// Shared geometry and per-colour materials — created once, reused every block
+const _sharedGeo = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+const _matCache = new Map<string, THREE.MeshStandardMaterial>();
+function _getMaterial(shapeKey: string): THREE.MeshStandardMaterial {
+  let mat = _matCache.get(shapeKey);
+  if (!mat) {
+    mat = new THREE.MeshStandardMaterial({
+      color: COLORS[shapeKey],
+      metalness: 0.65,
+      roughness: 0.28,
+    });
+    _matCache.set(shapeKey, mat);
+  }
+  return mat;
+}
 
 export class BlockFactory {
   private scene: THREE.Scene;
@@ -27,7 +44,6 @@ export class BlockFactory {
     platformTilt: number = 0
   ): PlacedBlock {
     const offsets = SHAPES[shapeKey];
-    const color = COLORS[shapeKey];
 
     // Center the shape around (0,0)
     const centerX = offsets.reduce((s, o) => s + o[0], 0) / offsets.length;
@@ -42,8 +58,7 @@ export class BlockFactory {
     body.angularFactor.set(0, 0, 1);
 
     const mesh = new THREE.Group();
-    const geo = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-    const mat = new THREE.MeshLambertMaterial({ color });
+    const mat = _getMaterial(shapeKey);
 
     for (const [dx, dy, dz] of offsets) {
       // Center offset — kept unrotated; body quaternion handles all rotation
@@ -54,7 +69,7 @@ export class BlockFactory {
       body.addShape(new CANNON.Box(halfExt), offsetVec);
 
       // Visual cubes without rotation - they'll be rotated by the mesh group
-      const cellMesh = new THREE.Mesh(geo, mat);
+      const cellMesh = new THREE.Mesh(_sharedGeo, mat);
       cellMesh.position.set(cx * BLOCK_SIZE, cy * BLOCK_SIZE, dz * BLOCK_SIZE);
       cellMesh.castShadow = true;
       cellMesh.receiveShadow = true;

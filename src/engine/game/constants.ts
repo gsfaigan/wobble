@@ -25,13 +25,13 @@ export const SHAPES: Record<string, [number, number, number][]> = {
 };
 
 export const COLORS: Record<string, number> = {
-  I: 0x00f5ff,
-  O: 0xffe600,
-  T: 0xa020f0,
-  L: 0xff8c00,
-  J: 0x0050ff,
-  S: 0x00c020,
-  Z: 0xff2020,
+  I: 0x0d7a8a,  // dark teal
+  O: 0x8a7010,  // dark amber
+  T: 0x6010a0,  // deep purple
+  L: 0x8a4a00,  // burnt orange
+  J: 0x1030a0,  // steel blue
+  S: 0x0a7020,  // forest green
+  Z: 0xa01010,  // dark red
 };
 
 export const SHAPE_KEYS = Object.keys(SHAPES);

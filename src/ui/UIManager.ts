@@ -1,3 +1,5 @@
+const TIMER_CIRCUMFERENCE = 163.36; // 2π × r26
+
 export class UIManager {
   private scoreEl: HTMLElement;
   private overlayEl: HTMLElement;
@@ -10,8 +12,13 @@ export class UIManager {
   private resumeBtn: HTMLButtonElement;
   private musicSlider: HTMLInputElement;
   private sfxSlider: HTMLInputElement;
+  private timerCard: HTMLElement;
+  private timerRing: SVGCircleElement;
+  private timerVal: HTMLElement;
 
   private currentScore: number = 0;
+  private _lastTimerSecs = -1;
+  private _lastTimerColor = '';
 
   constructor() {
     this.scoreEl         = document.getElementById('score-val')!;
@@ -25,6 +32,9 @@ export class UIManager {
     this.resumeBtn       = document.getElementById('resume-btn') as HTMLButtonElement;
     this.musicSlider     = document.getElementById('music-vol') as HTMLInputElement;
     this.sfxSlider       = document.getElementById('sfx-vol') as HTMLInputElement;
+    this.timerCard       = document.getElementById('timer-card')!;
+    this.timerRing       = document.getElementById('timer-ring') as unknown as SVGCircleElement;
+    this.timerVal        = document.getElementById('timer-val')!;
   }
 
   private _openPause!: () => void;
@@ -68,9 +78,36 @@ export class UIManager {
     this.scoreEl.textContent = String(score);
   }
 
+  showTimer(): void { this.timerCard.style.display = ''; }
+  hideTimer(): void {
+    this.timerCard.style.display = 'none';
+    this._lastTimerSecs = -1;
+    this._lastTimerColor = '';
+  }
+
+  /** Call every frame while game is active. timeLeftMs: remaining ms out of 20000. */
+  updateTimer(timeLeftMs: number): void {
+    const secs = Math.ceil(timeLeftMs / 1000);
+    const subFraction = (timeLeftMs % 1000) / 1000;
+    const offset = TIMER_CIRCUMFERENCE * (1 - subFraction);
+    this.timerRing.setAttribute('stroke-dashoffset', String(offset));
+    if (secs !== this._lastTimerSecs) {
+      this.timerVal.textContent = String(secs);
+      this._lastTimerSecs = secs;
+    }
+    const color = secs <= 3 ? '#ff4444' : secs <= 7 ? '#ffaa00' : '#ffffff';
+    if (color !== this._lastTimerColor) {
+      this.timerRing.setAttribute('stroke', color);
+      this.timerVal.style.color = color;
+      this._lastTimerColor = color;
+    }
+  }
+
   showGameOver(reason: string): void {
     this.reasonEl.textContent = reason === 'tilt'
       ? 'The platform tipped over'
+      : reason === 'timeout'
+      ? 'Too slow!'
       : 'A block hit the ground';
     this.gameOverScoreEl.textContent = String(this.currentScore);
     this.overlayEl.classList.add('visible');
