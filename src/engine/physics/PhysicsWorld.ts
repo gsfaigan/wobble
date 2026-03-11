@@ -11,7 +11,7 @@ export class PhysicsWorld {
     this.world.allowSleep = true;
     
     // Set default contact material with balanced settings
-    this.world.defaultContactMaterial.friction = 0.3;
+    this.world.defaultContactMaterial.friction = 0.01; //0.3;
     this.world.defaultContactMaterial.restitution = 0.1;
     this.world.defaultContactMaterial.contactEquationStiffness = 1e7;
     this.world.defaultContactMaterial.contactEquationRelaxation = 4;

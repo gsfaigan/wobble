@@ -15,6 +15,7 @@ import {
 export class Platform {
   platformBody: CANNON.Body;
   pivotBody: CANNON.Body;
+  groundBody: CANNON.Body;
   mesh: THREE.Group;
 
   private physicsWorld: PhysicsWorld;
@@ -30,7 +31,8 @@ export class Platform {
     this.mesh = new THREE.Group();
 
     // Static ground plane — blocks land on it, platform does NOT collide with it
-    const groundBody = new CANNON.Body({ mass: 0 });
+    this.groundBody = new CANNON.Body({ mass: 0 });
+    const groundBody = this.groundBody;
     const groundPlane = new CANNON.Plane();
     groundBody.addShape(groundPlane);
     groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);

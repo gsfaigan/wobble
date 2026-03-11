@@ -8,6 +8,7 @@ import { GhostBlock } from './GhostBlock';
 import { InputSystem } from './InputSystem';
 import { GameOverDetector } from './GameOverDetector';
 import { UIManager } from '../../ui/UIManager';
+import { AudioManager } from './AudioManager';
 import { SHAPE_KEYS, PLATFORM_WIDTH, PLATFORM_DEPTH, DROP_HEIGHT } from './constants';
 
 export class GameManager {
@@ -19,6 +20,7 @@ export class GameManager {
   private inputSystem!: InputSystem;
   private gameOverDetector: GameOverDetector;
   private ui: UIManager;
+  private audio: AudioManager = new AudioManager('/music.mp3');
 
   private placedBlocks: PlacedBlock[] = [];
   private score: number = 0;
@@ -40,6 +42,12 @@ export class GameManager {
 
     this.ui.onStart(() => this.beginPlay());
     this.ui.onRestart(() => this.start());
+    this.ui.onPause(
+      () => { this.inputSystem.setActive(false); },
+      () => { if (this.gameActive) this.inputSystem.setActive(true); },
+      (v) => this.audio.setVolume(v),
+      (v) => { this.audio.sfxVolume = v; }
+    );
 
     window.addEventListener('resize', () => this.scene.onResize());
 
@@ -58,6 +66,7 @@ export class GameManager {
 
   // Called by PLAY button — unpauses without rebuilding
   private beginPlay(): void {
+    this.audio.play();
     this.score = 0;
     this.turns = 0;
     this.ui.updateScore(0);
@@ -92,11 +101,17 @@ export class GameManager {
     this.platform = new Platform(this.scene.scene, this.physics);
     this.blockFactory = new BlockFactory(this.scene.scene, this.physics);
 
+    // Trigger game over the moment any block contacts the ground
+    this.platform.groundBody.addEventListener('collide', () => {
+      if (this.gameActive) this.triggerGameOver('grounded');
+    });
+
     if (this.ghostBlock) {
       this.scene.scene.remove(this.ghostBlock.mesh);
     }
     this.ghostBlock = new GhostBlock(this.scene.scene);
     this.ghostBlock.setVisible(true);
+    this.audio.play();
     this.gameActive = true;
     this.inputSystem.setActive(true);
     this.inputSystem.setDropPlaneHeight(DROP_HEIGHT);
@@ -187,6 +202,18 @@ export class GameManager {
     // Give gentle downward velocity to avoid clipping through platform
     block.body.velocity.set(0, -2, 0);
 
+    this.audio.playDrop();
+
+    // Play thud on collision, throttled to once per 120ms per block
+    let lastHit = 0;
+    block.body.addEventListener('collide', (e: any) => {
+      const now = performance.now();
+      if (now - lastHit < 120) return;
+      lastHit = now;
+      const vel = e.contact.getImpactVelocityAlongNormal();
+      this.audio.playHit(Math.abs(vel));
+    });
+
     this.placedBlocks.push(block);
     this.score += 10;
     this.ui.updateScore(this.score);
@@ -245,6 +272,12 @@ export class GameManager {
   loop(timestamp: number): void {
     const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05); // cap dt
     this.lastTime = timestamp;
+
+    if (this.ui.isPaused()) {
+      this.scene.render();
+      this._rafId = requestAnimationFrame((t) => this.loop(t));
+      return;
+    }
 
     this.update(dt);
     this.scene.render();

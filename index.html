@@ -263,6 +263,103 @@
       color: rgba(255,255,255,0.65);
       margin-right: 4px;
     }
+
+    /* ── Pause menu ── */
+    #pause-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      pointer-events: none;
+    }
+    #pause-overlay.visible {
+      display: flex;
+      pointer-events: all;
+      animation: overlayFadeIn 0.2s ease forwards;
+    }
+    #pause-card {
+      background: rgba(18,18,18,0.92);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      padding: 40px 52px;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(0,0,0,0.6), 0 24px 48px rgba(0,0,0,0.5);
+      min-width: 300px;
+    }
+    #pause-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: #fff;
+      margin-bottom: 32px;
+    }
+    .volume-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .volume-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      width: 60px;
+      text-align: left;
+    }
+    .volume-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.15);
+      outline: none;
+      cursor: pointer;
+    }
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+    }
+    .volume-slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      border: none;
+    }
+    #resume-btn {
+      margin-top: 28px;
+      padding: 12px 40px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      background: linear-gradient(135deg, #444, #222);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      transition: transform 0.15s ease, background 0.15s ease;
+      pointer-events: all;
+    }
+    #resume-btn:hover {
+      background: linear-gradient(135deg, #555, #333);
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
@@ -296,6 +393,21 @@
         <div id="game-over-score-label">Final Score</div>
         <div id="game-over-score-value" id="message-text">0</div>
         <button id="restart-btn">PLAY AGAIN</button>
+      </div>
+    </div>
+
+    <div id="pause-overlay">
+      <div id="pause-card">
+        <div id="pause-title">PAUSED</div>
+        <div class="volume-row">
+          <span class="volume-label">Music</span>
+          <input class="volume-slider" id="music-vol" type="range" min="0" max="100" value="50">
+        </div>
+        <div class="volume-row">
+          <span class="volume-label">SFX</span>
+          <input class="volume-slider" id="sfx-vol" type="range" min="0" max="100" value="100">
+        </div>
+        <button id="resume-btn">RESUME</button>
       </div>
     </div>
 
