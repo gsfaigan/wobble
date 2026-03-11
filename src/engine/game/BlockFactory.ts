@@ -34,8 +34,7 @@ export class BlockFactory {
     const centerY = offsets.reduce((s, o) => s + o[1], 0) / offsets.length;
 
     const body = new CANNON.Body({ mass: BLOCK_MASS, material: this.physicsWorld.blockMaterial });
-    body.sleepSpeedLimit = 0.5;
-    body.sleepTimeLimit = 1;
+    body.allowSleep = false;
     body.collisionFilterGroup = COL_BLOCK;
     body.collisionFilterMask = COL_GROUND | COL_PLATFORM | COL_BLOCK;
     // Restrict movement to the XY plane: suppress Z translation and only allow Z-axis rotation
