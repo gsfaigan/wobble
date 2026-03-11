@@ -38,7 +38,7 @@ export class Platform {
     groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
     groundBody.position.set(0, 0, 0);
     groundBody.collisionFilterGroup = COL_GROUND;
-    groundBody.collisionFilterMask = COL_BLOCK;
+    groundBody.collisionFilterMask = COL_BLOCK | COL_PLATFORM;
     physicsWorld.addBody(groundBody);
 
     // Static pivot/anchor at ground level
@@ -79,7 +79,7 @@ export class Platform {
     this.platformBody.linearDamping = 0.6;
     this.platformBody.angularDamping = 0.95;
     this.platformBody.collisionFilterGroup = COL_PLATFORM;
-    this.platformBody.collisionFilterMask = COL_BLOCK;
+    this.platformBody.collisionFilterMask = COL_BLOCK | COL_GROUND;
     physicsWorld.addBody(this.platformBody);
 
     // Hinge: Z-axis only rotation; pivotB = bottom of arc in platform local space

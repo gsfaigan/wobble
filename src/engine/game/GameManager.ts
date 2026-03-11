@@ -9,7 +9,7 @@ import { InputSystem } from './InputSystem';
 import { GameOverDetector } from './GameOverDetector';
 import { UIManager } from '../../ui/UIManager';
 import { AudioManager } from './AudioManager';
-import { SHAPE_KEYS, PLATFORM_WIDTH, PLATFORM_DEPTH, DROP_HEIGHT } from './constants';
+import { SHAPE_KEYS, PLATFORM_WIDTH, PLATFORM_DEPTH, DROP_HEIGHT, COL_BLOCK } from './constants';
 
 export class GameManager {
   private scene: SceneManager;
@@ -102,8 +102,10 @@ export class GameManager {
     this.blockFactory = new BlockFactory(this.scene.scene, this.physics);
 
     // Trigger game over the moment any block contacts the ground
-    this.platform.groundBody.addEventListener('collide', () => {
-      if (this.gameActive) this.triggerGameOver('grounded');
+    this.platform.groundBody.addEventListener('collide', (e: any) => {
+      if (this.gameActive && e.body.collisionFilterGroup === COL_BLOCK) {
+        this.triggerGameOver('grounded');
+      }
     });
 
     if (this.ghostBlock) {
