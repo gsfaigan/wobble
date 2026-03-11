@@ -12,7 +12,7 @@ import { SHAPE_KEYS, PLATFORM_WIDTH, PLATFORM_DEPTH, DROP_HEIGHT } from './const
 
 export class GameManager {
   private scene: SceneManager;
-  private physics: PhysicsWorld;
+  private physics!: PhysicsWorld;
   private platform!: Platform;
   private blockFactory!: BlockFactory;
   private ghostBlock!: GhostBlock;
@@ -24,6 +24,7 @@ export class GameManager {
   private score: number = 0;
   private turns: number = 0;
   private gameActive: boolean = false;
+  private _firstRun: boolean = true;
   private currentShapeKey: string = 'I';
   private dropHeight: number = DROP_HEIGHT;
 
@@ -34,22 +35,18 @@ export class GameManager {
   constructor() {
     const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
     this.scene = new SceneManager(canvas);
-    this.physics = new PhysicsWorld();
     this.gameOverDetector = new GameOverDetector();
     this.ui = new UIManager();
 
+    this.ui.onStart(() => this.beginPlay());
     this.ui.onRestart(() => this.start());
 
     window.addEventListener('resize', () => this.scene.onResize());
 
-    this._init();
+    this._init(); // sets up scene, physics, loop — paused until beginPlay()
   }
 
   private _init(): void {
-    this.platform = new Platform(this.scene.scene, this.physics);
-    this.blockFactory = new BlockFactory(this.scene.scene, this.physics);
-    this.ghostBlock = new GhostBlock(this.scene.scene);
-
     this.inputSystem = new InputSystem(
       this.scene.camera,
       this.scene.scene,
@@ -59,10 +56,21 @@ export class GameManager {
     );
   }
 
+  // Called by PLAY button — unpauses without rebuilding
+  private beginPlay(): void {
+    this.score = 0;
+    this.turns = 0;
+    this.ui.updateScore(0);
+    this.gameActive = true;
+    this.ghostBlock.setVisible(true);
+    this.inputSystem.setActive(true);
+    this.spawnNextBlock();
+  }
+
   start(): void {
-    // Clean up previous blocks
+    // Remove previous block meshes from scene
     for (const block of this.placedBlocks) {
-      this.blockFactory.removeBlock(block);
+      this.scene.scene.remove(block.mesh);
     }
     this.placedBlocks = [];
 
@@ -72,32 +80,36 @@ export class GameManager {
     this.dropHeight = DROP_HEIGHT;
     this._mousePos.y = DROP_HEIGHT;
     this.ui.updateScore(0);
-    this.ui.updateTurns(0);
     this.ui.hideGameOver();
     this.scene.resetCamera();
-    this.inputSystem.setDropPlaneHeight(DROP_HEIGHT);
 
-    // Rebuild physics/platform if restarting
+    // Discard old physics world entirely (avoids constraint/body removal issues)
+    // and rebuild platform fresh
     if (this.platform) {
-      // Remove old bodies
-      this.physics.removeBody(this.platform.platformBody);
-      this.physics.removeBody(this.platform.pivotBody);
       this.scene.scene.remove(this.platform.mesh);
-
-      // Remove constraints — recreate world
-      this.physics = new PhysicsWorld();
     }
-
+    this.physics = new PhysicsWorld();
     this.platform = new Platform(this.scene.scene, this.physics);
     this.blockFactory = new BlockFactory(this.scene.scene, this.physics);
 
+    if (this.ghostBlock) {
+      this.scene.scene.remove(this.ghostBlock.mesh);
+    }
+    this.ghostBlock = new GhostBlock(this.scene.scene);
     this.ghostBlock.setVisible(true);
     this.gameActive = true;
     this.inputSystem.setActive(true);
+    this.inputSystem.setDropPlaneHeight(DROP_HEIGHT);
 
     this.spawnNextBlock();
 
-    // Start loop if not running
+    if (this._firstRun) {
+      this._firstRun = false;
+      this.gameActive = false;
+      this.ghostBlock.setVisible(false);
+      this.inputSystem.setActive(false);
+    }
+
     cancelAnimationFrame(this._rafId);
     this.lastTime = performance.now();
     this._rafId = requestAnimationFrame((t) => this.loop(t));
@@ -108,7 +120,6 @@ export class GameManager {
     this.ghostBlock.setShape(this.currentShapeKey);
     this.ghostBlock.setPosition(this._mousePos);
     this.turns++;
-    this.ui.updateTurns(this.turns);
   }
 
   onMouseMove(pos: THREE.Vector3): void {

@@ -1,37 +1,48 @@
 export class UIManager {
   private scoreEl: HTMLElement;
-  private turnsEl: HTMLElement;
-  private messageEl: HTMLElement;
-  private messageTextEl: HTMLElement;
+  private overlayEl: HTMLElement;
+  private reasonEl: HTMLElement;
+  private gameOverScoreEl: HTMLElement;
   private restartBtn: HTMLButtonElement;
+  private startOverlay: HTMLElement;
+  private startBtn: HTMLButtonElement;
+
+  private currentScore: number = 0;
 
   constructor() {
-    this.scoreEl = document.getElementById('score-val')!;
-    this.turnsEl = document.getElementById('turns-val')!;
-    this.messageEl = document.getElementById('message')!;
-    this.messageTextEl = document.getElementById('message-text')!;
-    this.restartBtn = document.getElementById('restart-btn') as HTMLButtonElement;
+    this.scoreEl         = document.getElementById('score-val')!;
+    this.overlayEl       = document.getElementById('game-over-overlay')!;
+    this.reasonEl        = document.getElementById('game-over-reason')!;
+    this.gameOverScoreEl = document.getElementById('game-over-score-value')!;
+    this.restartBtn      = document.getElementById('restart-btn') as HTMLButtonElement;
+    this.startOverlay    = document.getElementById('start-overlay')!;
+    this.startBtn        = document.getElementById('start-btn') as HTMLButtonElement;
+  }
+
+  onStart(cb: () => void): void {
+    this.startBtn.addEventListener('click', () => {
+      this.startOverlay.classList.add('hidden');
+      cb();
+    });
   }
 
   updateScore(score: number): void {
+    this.currentScore = score;
     this.scoreEl.textContent = String(score);
   }
 
-  updateTurns(turns: number): void {
-    this.turnsEl.textContent = String(turns);
-  }
-
   showGameOver(reason: string): void {
-    const msg = reason === 'tilt'
-      ? 'Platform tipped over!'
-      : 'A block hit the ground!';
-    this.messageTextEl.textContent = `Game Over. ${msg}`;
-    this.messageEl.style.display = 'block';
+    this.reasonEl.textContent = reason === 'tilt'
+      ? 'The platform tipped over'
+      : 'A block hit the ground';
+    this.gameOverScoreEl.textContent = String(this.currentScore);
+    this.overlayEl.classList.add('visible');
     this.restartBtn.style.display = 'inline-block';
   }
 
   hideGameOver(): void {
-    this.messageEl.style.display = 'none';
+    this.overlayEl.classList.remove('visible');
+    this.overlayEl.style.display = '';
     this.restartBtn.style.display = 'none';
   }
 

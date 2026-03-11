@@ -38,6 +38,9 @@ export class BlockFactory {
     body.sleepTimeLimit = 1;
     body.collisionFilterGroup = COL_BLOCK;
     body.collisionFilterMask = COL_GROUND | COL_PLATFORM | COL_BLOCK;
+    // Restrict movement to the XY plane: suppress Z translation and only allow Z-axis rotation
+    body.linearFactor.set(1, 1, 0.05);
+    body.angularFactor.set(0, 0, 1);
 
     const mesh = new THREE.Group();
     const geo = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
