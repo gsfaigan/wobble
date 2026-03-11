@@ -52,8 +52,10 @@ export class Platform {
     // Platform board — center sits at ROCKER_RADIUS + half-height so arc bottom touches y=0
     // Create zigzag pattern with alternating y-positions (up-down along x-axis)
     const platformY = ROCKER_RADIUS + BLOCK_SIZE / 2;
-    this.platformBody = new CANNON.Body({ mass: 15 });
-    
+    this.platformBody = new CANNON.Body({ mass: 15, material: physicsWorld.platformMaterial });
+    this.platformBody.linearDamping = 0.6;
+    this.platformBody.angularDamping = 0.99;
+
     // Quaternions for alternating 45 degree rotations around z-axis
     const rotation45CW = new CANNON.Quaternion();
     rotation45CW.setFromEuler(0, 0, Math.PI / 4);
@@ -76,8 +78,6 @@ export class Platform {
     }
     
     this.platformBody.position.set(0, platformY, 0);
-    this.platformBody.linearDamping = 0.6;
-    this.platformBody.angularDamping = 0.95;
     this.platformBody.collisionFilterGroup = COL_PLATFORM;
     this.platformBody.collisionFilterMask = COL_BLOCK | COL_GROUND;
     physicsWorld.addBody(this.platformBody);
@@ -288,6 +288,23 @@ export class Platform {
     if (this.rotationLocked) {
       this.rotationLocked = false;
     }
+  }
+
+  // Apply a small tilt nudge when a block is placed.
+  // xOffset: block x position (platform center is 0).
+  nudgeTilt(xOffset: number): void {
+    const halfWidth = PLATFORM_WIDTH / 2;
+    const normalized = Math.max(-1, Math.min(1, xOffset / halfWidth));
+    // Positive x → tip clockwise → negative Z angular velocity
+    this.platformBody.angularVelocity.z -= normalized * 0.35;
+    this.platformBody.wakeUp();
+  }
+
+  // Proportional controller: each frame nudge angular velocity toward the target tilt angle.
+  driveTowardAngle(targetAngle: number): void {
+    const error = targetAngle - this.getTiltAngle();
+    this.platformBody.angularVelocity.z += error * 0.15;
+    this.platformBody.wakeUp();
   }
 
   isRotationLocked(): boolean {

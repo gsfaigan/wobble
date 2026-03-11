@@ -23,6 +23,7 @@ export class GameManager {
   private audio: AudioManager = new AudioManager('/music.mp3');
 
   private placedBlocks: PlacedBlock[] = [];
+  private dropXPositions: number[] = [];
   private score: number = 0;
   private turns: number = 0;
   private gameActive: boolean = false;
@@ -89,6 +90,7 @@ export class GameManager {
       this.scene.scene.remove(block.mesh);
     }
     this.placedBlocks = [];
+    this.dropXPositions = [];
 
     // Reset score
     this.score = 0;
@@ -216,10 +218,16 @@ export class GameManager {
 
     this.audio.playDrop();
 
-    // Play thud on collision, throttled to once per 120ms per block
+    // On first contact: register drop position for tilt controller and nudge platform
+    let landed = false;
     let lastHit = 0;
     block.body.addEventListener('collide', (e: any) => {
       const now = performance.now();
+      if (!landed) {
+        landed = true;
+        this.dropXPositions.push(spawnPos.x);
+        this.platform.nudgeTilt(block.body.position.x);
+      }
       if (now - lastHit < 120) return;
       lastHit = now;
       const vel = e.contact.getImpactVelocityAlongNormal();
@@ -230,8 +238,8 @@ export class GameManager {
     this.score += 10;
     this.ui.updateScore(this.score);
 
-    // Unlock platform rotation once enough weight is on it (minimum 3 blocks)
-    if (this.platform.isRotationLocked() && this.placedBlocks.length >= 3) {
+    // Unlock platform rotation on first block
+    if (this.platform.isRotationLocked()) {
       this.platform.unlockRotation();
     }
 
@@ -249,6 +257,15 @@ export class GameManager {
   update(dt: number): void {
     this.physics.step(dt);
     this.platform.update(); // Apply rotation lock if active
+
+    // Drive platform tilt based on stable drop positions (not drifting physics positions)
+    if (this.dropXPositions.length > 0) {
+      const netDropX = this.dropXPositions.reduce((s, x) => s + x, 0);
+      const targetAngle = Math.max(-Math.PI / 4 + 0.05, Math.min(Math.PI / 4 - 0.05,
+        -netDropX * 0.015
+      ));
+      this.platform.driveTowardAngle(targetAngle);
+    }
     this.platform.syncMesh();
     this.scene.updateCamera(dt);
     this.scene.updateClouds(dt);
