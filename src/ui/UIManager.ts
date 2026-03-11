@@ -27,20 +27,29 @@ export class UIManager {
     this.sfxSlider       = document.getElementById('sfx-vol') as HTMLInputElement;
   }
 
+  private _openPause!: () => void;
+  private _closePause!: () => void;
+
   onPause(onOpen: () => void, onClose: () => void,
           onMusicVol: (v: number) => void, onSfxVol: (v: number) => void): void {
-    const open = () => { this.pauseOverlay.classList.add('visible'); onOpen(); };
-    const close = () => { this.pauseOverlay.classList.remove('visible'); onClose(); };
+    this._openPause  = () => { this.pauseOverlay.classList.add('visible'); onOpen(); };
+    this._closePause = () => { this.pauseOverlay.classList.remove('visible'); onClose(); };
 
-    this.resumeBtn.addEventListener('click', close);
+    this.resumeBtn.addEventListener('click', this._closePause);
     this.musicSlider.addEventListener('input', () => onMusicVol(Number(this.musicSlider.value) / 100));
     this.sfxSlider.addEventListener('input', () => onSfxVol(Number(this.sfxSlider.value) / 100));
 
+    document.getElementById('pause-btn')?.addEventListener('click', () => this.togglePause());
+
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
-        if (this.pauseOverlay.classList.contains('visible')) close(); else open();
+        this.togglePause();
       }
     });
+  }
+
+  togglePause(): void {
+    if (this.pauseOverlay.classList.contains('visible')) this._closePause(); else this._openPause();
   }
 
   isPaused(): boolean {

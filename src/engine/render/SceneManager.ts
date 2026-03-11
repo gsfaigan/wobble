@@ -1,7 +1,11 @@
 import * as THREE from 'three';
 
+const isMobile = () => window.matchMedia('(pointer: coarse)').matches;
+
 const INIT_CAM_Y = 15;
 const INIT_CAM_Z = 25;
+const INIT_CAM_Y_MOBILE = 22;
+const INIT_CAM_Z_MOBILE = 38;
 const MAX_CAM_Y = 60;
 const MAX_CAM_Z = 60;
 
@@ -19,13 +23,18 @@ export class SceneManager {
     this.scene.background = new THREE.Color(0x87CEEB); // Sky blue
     this.scene.fog = new THREE.Fog(0x87CEEB, 40, 120); // Blue fog starting closer for better visibility
 
+    const initY = isMobile() ? INIT_CAM_Y_MOBILE : INIT_CAM_Y;
+    const initZ = isMobile() ? INIT_CAM_Z_MOBILE : INIT_CAM_Z;
+    this.targetY = initY;
+    this.targetZ = initZ;
+
     this.camera = new THREE.PerspectiveCamera(
       55,
       window.innerWidth / window.innerHeight,
       0.1,
       100
     );
-    this.camera.position.set(0, INIT_CAM_Y, INIT_CAM_Z);
+    this.camera.position.set(0, initY, initZ);
     this.camera.lookAt(0, 1, 0);
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -110,9 +119,11 @@ export class SceneManager {
   }
 
   resetCamera(): void {
-    this.targetZ = INIT_CAM_Z;
-    this.targetY = INIT_CAM_Y;
-    this.camera.position.set(0, INIT_CAM_Y, INIT_CAM_Z);
+    const initY = isMobile() ? INIT_CAM_Y_MOBILE : INIT_CAM_Y;
+    const initZ = isMobile() ? INIT_CAM_Z_MOBILE : INIT_CAM_Z;
+    this.targetY = initY;
+    this.targetZ = initZ;
+    this.camera.position.set(0, initY, initZ);
   }
 
   /** Call each frame — eases camera toward target. */

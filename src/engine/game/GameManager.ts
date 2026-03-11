@@ -62,6 +62,11 @@ export class GameManager {
       () => this.onDrop(),
       () => this.onRotate()
     );
+
+    this.inputSystem.onTouchChange = (active: boolean) => {
+      if (this.gameActive) this.ghostBlock.setVisible(active);
+    };
+
   }
 
   // Called by PLAY button — unpauses without rebuilding
@@ -71,7 +76,7 @@ export class GameManager {
     this.turns = 0;
     this.ui.updateScore(0);
     this.gameActive = true;
-    this.ghostBlock.setVisible(true);
+    this.ghostBlock.setVisible(!InputSystem.isTouchDevice());
     this.inputSystem.setActive(true);
     this.spawnNextBlock();
   }
@@ -112,7 +117,7 @@ export class GameManager {
       this.scene.scene.remove(this.ghostBlock.mesh);
     }
     this.ghostBlock = new GhostBlock(this.scene.scene);
-    this.ghostBlock.setVisible(true);
+    this.ghostBlock.setVisible(!InputSystem.isTouchDevice());
     this.audio.play();
     this.gameActive = true;
     this.inputSystem.setActive(true);
