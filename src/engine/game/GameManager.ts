@@ -31,6 +31,8 @@ export class GameManager {
   private dropHeight: number = DROP_HEIGHT;
 
   private lastTime: number = 0;
+  private lastDropTime: number = 0;
+  private readonly DROP_COOLDOWN_MS = 600;
   private _mousePos: THREE.Vector3 = new THREE.Vector3(0, DROP_HEIGHT, 0);
   private _rafId: number = 0;
 
@@ -198,6 +200,9 @@ export class GameManager {
 
   onDrop(): void {
     if (!this.gameActive) return;
+    const now = performance.now();
+    if (now - this.lastDropTime < this.DROP_COOLDOWN_MS) return;
+    this.lastDropTime = now;
 
     const dropPos = this.ghostBlock.getDropPosition();
     const rotation = this.ghostBlock.getRotation();
