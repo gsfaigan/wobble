@@ -21,7 +21,7 @@ export class SceneManager {
   constructor(canvas: HTMLCanvasElement) {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x87CEEB); // Sky blue
-    this.scene.fog = new THREE.Fog(0x87CEEB, 40, 120); // Blue fog starting closer for better visibility
+    this.scene.fog = new THREE.Fog(0x87CEEB, 55, 200);
 
     const initY = isMobile() ? INIT_CAM_Y_MOBILE : INIT_CAM_Y;
     const initZ = isMobile() ? INIT_CAM_Z_MOBILE : INIT_CAM_Z;
@@ -32,7 +32,7 @@ export class SceneManager {
       55,
       window.innerWidth / window.innerHeight,
       0.1,
-      100
+      250
     );
     this.camera.position.set(0, initY, initZ);
     this.camera.lookAt(0, 1, 0);

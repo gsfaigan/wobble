@@ -273,6 +273,171 @@ export class Platform {
     }
     
     scene.add(instancedGrass);
+
+    // --- Flowers (~150 instances) ---
+    const flowerCount = 150;
+    const flowerPositions: [number, number][] = [];
+    while (flowerPositions.length < flowerCount) {
+      const fx = (Math.random() - 0.5) * 160;
+      const fz = (Math.random() - 0.5) * 160;
+      if (Math.sqrt(fx * fx + fz * fz) >= 5) {
+        flowerPositions.push([fx, fz]);
+      }
+    }
+
+    // Stems
+    const stemGeo = new THREE.CylinderGeometry(0.03, 0.04, 1, 5);
+    const stemMat = new THREE.MeshLambertMaterial({ color: 0x3a8a2a });
+    const instancedStems = new THREE.InstancedMesh(stemGeo, stemMat, flowerCount);
+    instancedStems.receiveShadow = true;
+
+    // Flower tops
+    const petalGeo = new THREE.CircleGeometry(0.12, 8);
+    const petalMat = new THREE.MeshLambertMaterial({ side: THREE.DoubleSide });
+    const instancedPetals = new THREE.InstancedMesh(petalGeo, petalMat, flowerCount);
+    instancedPetals.receiveShadow = true;
+
+    const petalColors = [
+      new THREE.Color(0xffee44), // yellow
+      new THREE.Color(0xff88bb), // pink
+      new THREE.Color(0xff3333), // red
+      new THREE.Color(0xffffff), // white
+      new THREE.Color(0xff8833), // orange
+      new THREE.Color(0xcc88ff), // lavender
+      new THREE.Color(0xff44cc), // magenta
+    ];
+
+    const flowerDummy = new THREE.Object3D();
+    for (let i = 0; i < flowerCount; i++) {
+      const [fx, fz] = flowerPositions[i];
+      const stemHeight = 0.25 + Math.random() * 0.3; // 0.25–0.55
+
+      // Stem
+      flowerDummy.position.set(fx, stemHeight / 2, fz);
+      flowerDummy.rotation.set(0, 0, 0);
+      flowerDummy.scale.set(1, stemHeight, 1);
+      flowerDummy.updateMatrix();
+      instancedStems.setMatrixAt(i, flowerDummy.matrix);
+
+      // Petal disc (flat, facing up)
+      flowerDummy.position.set(fx, stemHeight, fz);
+      flowerDummy.rotation.set(-Math.PI / 2, 0, Math.random() * Math.PI * 2);
+      flowerDummy.scale.set(1, 1, 1);
+      flowerDummy.updateMatrix();
+      instancedPetals.setMatrixAt(i, flowerDummy.matrix);
+      instancedPetals.setColorAt(i, petalColors[Math.floor(Math.random() * petalColors.length)]);
+    }
+
+    instancedStems.instanceMatrix.needsUpdate = true;
+    instancedPetals.instanceMatrix.needsUpdate = true;
+    if (instancedPetals.instanceColor) instancedPetals.instanceColor.needsUpdate = true;
+
+    scene.add(instancedStems);
+    scene.add(instancedPetals);
+
+    // --- Boulders (clustered, ~120 instances) ---
+    const bouldersPerCluster = 8 + Math.floor(Math.random() * 6); // 8–13 per cluster
+    const clusterCount = 12;
+    const boulderPositions: [number, number][] = [];
+
+    for (let c = 0; c < clusterCount; c++) {
+      // Pick a cluster center far enough from origin
+      let cx = 0, cz = 0;
+      do {
+        cx = (Math.random() - 0.5) * 150;
+        cz = (Math.random() - 0.5) * 150;
+      } while (Math.sqrt(cx * cx + cz * cz) < 10);
+
+      const spread = 4 + Math.random() * 5; // cluster radius 4–9
+      for (let b = 0; b < bouldersPerCluster; b++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * spread;
+        boulderPositions.push([cx + Math.cos(angle) * dist, cz + Math.sin(angle) * dist]);
+      }
+    }
+    const boulderCount = boulderPositions.length;
+
+    const boulderGeo = new THREE.IcosahedronGeometry(1, 1);
+    const boulderMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
+    const instancedBoulders = new THREE.InstancedMesh(boulderGeo, boulderMat, boulderCount);
+    instancedBoulders.receiveShadow = true;
+    instancedBoulders.castShadow = true;
+
+    const boulderDummy = new THREE.Object3D();
+    for (let i = 0; i < boulderCount; i++) {
+      const [bx, bz] = boulderPositions[i];
+      const size = 0.3 + Math.random() * 0.9; // 0.3–1.2
+      const sx = size * (0.7 + Math.random() * 0.6);
+      const sy = size * (0.7 + Math.random() * 0.6);
+      const sz = size * (0.7 + Math.random() * 0.6);
+
+      boulderDummy.position.set(bx, sy * 0.5, bz);
+      boulderDummy.rotation.set(0, Math.random() * Math.PI * 2, 0);
+      boulderDummy.scale.set(sx, sy, sz);
+      boulderDummy.updateMatrix();
+      instancedBoulders.setMatrixAt(i, boulderDummy.matrix);
+
+      // Slight gray/brown variation
+      const grayTone = 0.45 + Math.random() * 0.25;
+      const brownTint = Math.random() * 0.08;
+      instancedBoulders.setColorAt(i, new THREE.Color(grayTone + brownTint, grayTone, grayTone - brownTint * 0.5));
+    }
+
+    instancedBoulders.instanceMatrix.needsUpdate = true;
+    if (instancedBoulders.instanceColor) instancedBoulders.instanceColor.needsUpdate = true;
+
+    scene.add(instancedBoulders);
+
+    // --- Mountains ---
+    // Mid-distance hills (radius 65–90): gray-green, height 8–20
+    const hillCount = 20;
+    for (let i = 0; i < hillCount; i++) {
+      const angle = (i / hillCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+      const radius = 65 + Math.random() * 25;
+      const mx = Math.cos(angle) * radius;
+      const mz = Math.sin(angle) * radius;
+      const height = 8 + Math.random() * 12;
+      const baseRadius = 10 + Math.random() * 12;
+
+      const hillProfile: THREE.Vector2[] = [];
+      for (let p = 0; p <= 10; p++) {
+        const t = (p / 10) * (Math.PI / 2);
+        hillProfile.push(new THREE.Vector2(baseRadius * Math.cos(t), -height / 2 + height * Math.sin(t)));
+      }
+      const geo = new THREE.LatheGeometry(hillProfile, 6 + Math.floor(Math.random() * 4));
+
+      const mat = new THREE.MeshLambertMaterial({ map: grassTexture, color: 0xffffff });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(mx, height / 2 - 0.5, mz);
+      mesh.rotation.y = Math.random() * Math.PI * 2;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+    }
+
+    // Far background mountains (radius 95–145): blue-gray, height 25–65
+    const mountainCount = 28;
+    for (let i = 0; i < mountainCount; i++) {
+      const angle = (i / mountainCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+      const radius = 95 + Math.random() * 50;
+      const mx = Math.cos(angle) * radius;
+      const mz = Math.sin(angle) * radius;
+      const height = 25 + Math.random() * 40;
+      const baseRadius = 14 + Math.random() * 16;
+
+      const mtProfile: THREE.Vector2[] = [];
+      for (let p = 0; p <= 10; p++) {
+        const t = (p / 10) * (Math.PI / 2);
+        mtProfile.push(new THREE.Vector2(baseRadius * Math.cos(t), -height / 2 + height * Math.sin(t)));
+      }
+      const geo = new THREE.LatheGeometry(mtProfile, 7 + Math.floor(Math.random() * 4));
+
+      const mat = new THREE.MeshLambertMaterial({ map: grassTexture, color: 0xffffff });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(mx, height / 2 - 0.5, mz);
+      mesh.rotation.y = Math.random() * Math.PI * 2;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+    }
   }
 
   getTiltAngle(): number {
