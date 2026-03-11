@@ -9,6 +9,7 @@ import { InputSystem } from './InputSystem';
 import { GameOverDetector } from './GameOverDetector';
 import { UIManager } from '../../ui/UIManager';
 import { AudioManager } from './AudioManager';
+import { ExplosionEffect } from './ExplosionEffect';
 import { SHAPE_KEYS, PLATFORM_WIDTH, PLATFORM_DEPTH, DROP_HEIGHT, COL_BLOCK } from './constants';
 
 export class GameManager {
@@ -23,6 +24,7 @@ export class GameManager {
   private audio: AudioManager = new AudioManager('/music.mp3');
 
   private placedBlocks: PlacedBlock[] = [];
+  private _explosion: ExplosionEffect | null = null;
   private _netDropX: number = 0;
   private score: number = 0;
   private turns: number = 0;
@@ -88,6 +90,12 @@ export class GameManager {
   }
 
   start(): void {
+    // Clean up any active explosion
+    if (this._explosion) {
+      this._explosion.dispose(this.scene.scene);
+      this._explosion = null;
+    }
+
     // Remove previous block meshes from scene
     for (const block of this.placedBlocks) {
       this.scene.scene.remove(block.mesh);
@@ -116,7 +124,8 @@ export class GameManager {
     // Explosion when any block hits the ground
     this.platform.groundBody.addEventListener('collide', (e: any) => {
       if (this.gameActive && e.body.collisionFilterGroup === COL_BLOCK) {
-        this._triggerExplosion('grounded');
+        const p = e.body.position;
+        this._triggerExplosion('grounded', new THREE.Vector3(p.x, p.y, p.z));
       }
     });
 
@@ -280,6 +289,14 @@ export class GameManager {
       this.blockFactory.syncMeshToBody(block);
     }
 
+    if (this._explosion) {
+      const done = this._explosion.update(dt);
+      if (done) {
+        this._explosion.dispose(this.scene.scene);
+        this._explosion = null;
+      }
+    }
+
     if (this.gameActive) {
       // Update drop height continuously based on current mouse X position
       this.dropHeight = this.calculateDropHeight(this._mousePos.x);
@@ -302,7 +319,7 @@ export class GameManager {
     }
   }
 
-  private _triggerExplosion(reason: string): void {
+  private _triggerExplosion(reason: string, origin: THREE.Vector3 = new THREE.Vector3(0, 2, 0)): void {
     if (!this.gameActive) return;
     this.gameActive = false;
     this.inputSystem.setActive(false);
@@ -322,6 +339,10 @@ export class GameManager {
         new CANNON.Vec3(0, 0, 0),
       );
     }
+
+    this._explosion = new ExplosionEffect(this.scene.scene, origin);
+    this.scene.triggerShake(0.45);
+    this.ui.triggerFlash();
 
     setTimeout(() => this.ui.showGameOver(reason), 2200);
   }

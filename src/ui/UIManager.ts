@@ -21,6 +21,11 @@ export class UIManager {
   private _lastTimerColor = '';
 
   constructor() {
+    const flashEl = document.createElement('div');
+    flashEl.id = 'flash-overlay';
+    flashEl.style.cssText = 'position:fixed;inset:0;background:#fff;pointer-events:none;opacity:0;z-index:50;';
+    document.body.appendChild(flashEl);
+
     this.scoreEl         = document.getElementById('score-val')!;
     this.overlayEl       = document.getElementById('game-over-overlay')!;
     this.reasonEl        = document.getElementById('game-over-reason')!;
@@ -118,6 +123,16 @@ export class UIManager {
     this.overlayEl.classList.remove('visible');
     this.overlayEl.style.display = '';
     this.restartBtn.style.display = 'none';
+  }
+
+  triggerFlash(): void {
+    const el = document.getElementById('flash-overlay')!;
+    el.style.transition = 'none';
+    el.style.opacity = '0.85';
+    requestAnimationFrame(() => {
+      el.style.transition = 'opacity 0.45s ease-out';
+      el.style.opacity = '0';
+    });
   }
 
   onRestart(cb: () => void): void {

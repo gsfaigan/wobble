@@ -17,6 +17,7 @@ export class SceneManager {
   private targetY: number = INIT_CAM_Y;
   private targetZ: number = INIT_CAM_Z;
   private clouds: { mesh: THREE.Group; speed: number }[] = [];
+  private _shakeMagnitude = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.scene = new THREE.Scene();
@@ -115,6 +116,10 @@ export class SceneManager {
     }
   }
 
+  triggerShake(magnitude: number): void {
+    this._shakeMagnitude = magnitude;
+  }
+
   /** Nudge the camera target outward by dz (back) and dy (up). */
   nudgeOut(dz: number, dy: number): void {
     this.targetZ = Math.min(this.targetZ + dz, MAX_CAM_Z);
@@ -135,6 +140,11 @@ export class SceneManager {
     const alpha = 1 - Math.pow(0.01, dt * 4);
     this.camera.position.z += (this.targetZ - this.camera.position.z) * alpha;
     this.camera.position.y += (this.targetY - this.camera.position.y) * alpha;
+    if (this._shakeMagnitude > 0.001) {
+      this.camera.position.x += (Math.random() - 0.5) * this._shakeMagnitude;
+      this.camera.position.y += (Math.random() - 0.5) * this._shakeMagnitude * 0.5;
+      this._shakeMagnitude *= Math.max(0, 1 - 8 * dt);
+    }
     this.camera.lookAt(0, 3, 0);
   }
 
