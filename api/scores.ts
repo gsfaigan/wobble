@@ -1,5 +1,8 @@
 import { Redis } from '@upstash/redis';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Filter } from 'bad-words';
+
+const filter = new Filter();
 
 const redis = new Redis({
   url: process.env.KV_REST_API_URL!,
@@ -37,6 +40,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const cleanName = name.trim().replace(/[^\x20-\x7E]/g, '').slice(0, MAX_NAME_LEN);
     if (cleanName.length === 0) {
       return res.status(400).json({ error: 'Invalid name' });
+    }
+    if (filter.isProfane(cleanName)) {
+      return res.status(400).json({ error: 'Inappropriate name — please choose another' });
     }
 
     const rawScore = Number(score);

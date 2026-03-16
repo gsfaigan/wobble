@@ -52,11 +52,16 @@ export class GameManager {
     this.ui.onSubmitScore(async (name) => {
       this.ui.showSubmitStatus('Submitting…');
       try {
-        await fetch('/api/scores', {
+        const res = await fetch('/api/scores', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, score: this.score }),
         });
+        if (!res.ok) {
+          const { error } = await res.json();
+          this.ui.showSubmitStatus(error ?? 'Could not save score — try again.');
+          return;
+        }
         const entries: LeaderboardEntry[] = await fetch('/api/scores').then(r => r.json());
         this.ui.showLeaderboard(entries, this.score);
       } catch {
