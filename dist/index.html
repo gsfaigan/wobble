@@ -59,6 +59,51 @@
       text-shadow: 0 0 16px rgba(255,255,255,0.25);
     }
 
+    /* ── Timer ── */
+    #timer-card { padding: 8px 14px 10px; min-width: 0; }
+
+    #timer-wrap {
+      position: relative;
+      width: 64px;
+      height: 64px;
+    }
+
+    #timer-svg {
+      width: 64px;
+      height: 64px;
+      transform: rotate(-90deg);
+    }
+
+    .timer-track {
+      fill: none;
+      stroke: rgba(255,255,255,0.1);
+      stroke-width: 3.5;
+    }
+
+    #timer-ring {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-dasharray: 163.36;
+      stroke-dashoffset: 0;
+      transition: stroke 0.4s ease;
+    }
+
+    #timer-val {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      text-shadow: 0 0 10px rgba(255,255,255,0.25);
+      transition: color 0.4s ease;
+    }
+
     /* ── Game Over overlay ── */
     #game-over-overlay {
       position: absolute;
@@ -132,6 +177,102 @@
       text-shadow: 0 0 30px rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.8);
       margin-bottom: 36px;
       line-height: 1;
+    }
+
+    /* ── Leaderboard ── */
+    #score-submit-section {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    #name-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #player-name {
+      flex: 1;
+      max-width: 180px;
+      padding: 10px 14px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 50px;
+      color: #fff;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    #player-name::placeholder { color: rgba(255,255,255,0.3); }
+    #player-name:focus { border-color: rgba(255,255,255,0.45); }
+
+    #submit-score-btn {
+      pointer-events: all;
+      padding: 10px 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, #555, #333);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    #submit-score-btn:hover { background: linear-gradient(135deg, #666, #444); transform: translateY(-1px); }
+    #submit-score-btn:active { transform: translateY(0); }
+    #submit-score-btn:disabled { opacity: 0.45; cursor: default; transform: none; }
+
+    #submit-status {
+      font-size: 12px;
+      color: rgba(255,255,255,0.45);
+      margin: 8px 0 0;
+      min-height: 16px;
+      text-align: center;
+    }
+
+    #leaderboard-section {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    #leaderboard-title { margin: 0 0 12px; }
+
+    #leaderboard-list li.you {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .lb-rank {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      width: 22px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .lb-name {
+      flex: 1;
+      color: rgba(255,255,255,0.85);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .lb-score {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #e8e8e8;
+      flex-shrink: 0;
     }
 
     #restart-btn {
@@ -236,6 +377,41 @@
     }
 
     #start-btn:active { transform: translateY(0); }
+
+    #start-leaderboard {
+      margin-top: 32px;
+      text-align: left;
+    }
+
+    .leaderboard-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin: 0 0 12px;
+      text-align: center;
+    }
+
+    .leaderboard-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .leaderboard-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      background: rgba(255,255,255,0.04);
+    }
 
     #controls-hint {
       position: absolute;
@@ -415,7 +591,7 @@
       #resume-btn { padding: 10px 32px; font-size: 12px; margin-top: 20px; }
     }
   </style>
-  <script type="module" crossorigin src="/assets/index-YnZS91aP.js"></script>
+  <script type="module" crossorigin src="/assets/index-BKGzf9u9.js"></script>
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -425,6 +601,16 @@
       <div class="hud-card">
         <div class="hud-label">Score</div>
         <div class="hud-value" id="score-val">0</div>
+      </div>
+      <div class="hud-card" id="timer-card" style="display:none;">
+        <div class="hud-label">Time</div>
+        <div id="timer-wrap">
+          <svg id="timer-svg" viewBox="0 0 64 64">
+            <circle class="timer-track" cx="32" cy="32" r="26"/>
+            <circle id="timer-ring" cx="32" cy="32" r="26"/>
+          </svg>
+          <div id="timer-val">20</div>
+        </div>
       </div>
     </div>
 
@@ -437,6 +623,10 @@
           <span class="hint-key">R</span> rotate
         </div>
         <button id="start-btn">PLAY</button>
+        <div id="start-leaderboard">
+          <h3 class="leaderboard-title">Top 10</h3>
+          <ol id="start-lb-list" class="leaderboard-list"></ol>
+        </div>
       </div>
     </div>
 
@@ -446,6 +636,20 @@
         <div id="game-over-reason"></div>
         <div id="game-over-score-label">Final Score</div>
         <div id="game-over-score-value" id="message-text">0</div>
+
+        <div id="score-submit-section">
+          <div id="name-row">
+            <input id="player-name" type="text" maxlength="20" placeholder="Enter your name" autocomplete="off" spellcheck="false" />
+            <button id="submit-score-btn">Submit</button>
+          </div>
+          <p id="submit-status"></p>
+        </div>
+
+        <div id="leaderboard-section" style="display:none;">
+          <h3 id="leaderboard-title" class="leaderboard-title">Top 10</h3>
+          <ol id="leaderboard-list" class="leaderboard-list"></ol>
+        </div>
+
         <button id="restart-btn">PLAY AGAIN</button>
       </div>
     </div>

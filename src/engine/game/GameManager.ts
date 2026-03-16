@@ -32,6 +32,7 @@ export class GameManager {
   private _firstRun: boolean = true;
   private currentShapeKey: string = 'I';
   private dropHeight: number = DROP_HEIGHT;
+  private sessionId: string | null = null;
 
   private lastTime: number = 0;
   private lastDropTime: number = 0;
@@ -56,7 +57,7 @@ export class GameManager {
         const res = await fetch('/api/scores', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, score: this.score }),
+          body: JSON.stringify({ name, score: this.score, sessionId: this.sessionId }),
         });
         if (!res.ok) {
           const { error } = await res.json();
@@ -86,6 +87,16 @@ export class GameManager {
     this._init(); // sets up scene, physics, loop — paused until beginPlay()
   }
 
+  private _requestSession(): void {
+    this.sessionId = null;
+    fetch('/api/game-session', { method: 'POST' })
+      .then(r => r.json())
+      .then((data: { sessionId?: string }) => {
+        if (data.sessionId) this.sessionId = data.sessionId;
+      })
+      .catch(() => {});
+  }
+
   private _init(): void {
     this.inputSystem = new InputSystem(
       this.scene.camera,
@@ -104,6 +115,7 @@ export class GameManager {
   // Called by PLAY button — unpauses without rebuilding
   private beginPlay(): void {
     this.audio.play();
+    this._requestSession();
     this.score = 0;
     this.turns = 0;
     this.ui.updateScore(0);
@@ -166,6 +178,7 @@ export class GameManager {
     this.ghostBlock = new GhostBlock(this.scene.scene);
     this.ghostBlock.setVisible(!InputSystem.isTouchDevice());
     this.audio.play();
+    if (!this._firstRun) this._requestSession();
     this.gameActive = true;
     this.inputSystem.setActive(true);
     this.inputSystem.setDropPlaneHeight(DROP_HEIGHT);

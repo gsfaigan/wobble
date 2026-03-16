@@ -32,7 +32,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method === 'POST') {
-    const { name, score } = req.body ?? {};
+    const { name, score, sessionId } = req.body ?? {};
+
+    if (!sessionId || typeof sessionId !== 'string') {
+      return res.status(400).json({ error: 'Missing game session' });
+    }
+
+    const rawIssuedAt = await redis.get<number>(`wobble:session:${sessionId}`);
+    if (rawIssuedAt === null) {
+      return res.status(400).json({ error: 'Invalid or expired game session' });
+    }
+
+    // One-time use: delete immediately
+    await redis.del(`wobble:session:${sessionId}`);
+
+    const elapsedSeconds = (Date.now() - Number(rawIssuedAt)) / 1000;
+    // Max blocks = elapsedSeconds / 0.6s (DROP_COOLDOWN_MS), 10pts each, 1.5x buffer
+    const maxPlausibleScore = Math.floor(elapsedSeconds / 0.6) * 10 * 1.5;
+
+    const rawScore = Number(score);
+    if (!isFinite(rawScore) || rawScore < 0) {
+      return res.status(400).json({ error: 'Invalid score' });
+    }
+    if (rawScore > maxPlausibleScore) {
+      return res.status(400).json({ error: 'Score not plausible for session duration' });
+    }
 
     if (typeof name !== 'string' || name.trim().length === 0) {
       return res.status(400).json({ error: 'Invalid name' });
@@ -50,10 +74,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Inappropriate name — please choose another' });
     }
 
-    const rawScore = Number(score);
-    if (!isFinite(rawScore) || rawScore < 0) {
-      return res.status(400).json({ error: 'Invalid score' });
-    }
     const cleanScore = Math.min(Math.floor(rawScore), MAX_SCORE);
 
     // gt: true — only update if the new score is higher than the existing one
