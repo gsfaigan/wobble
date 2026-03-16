@@ -126,13 +126,14 @@ export class UIManager {
     }
   }
 
-  showGameOver(reason: string): void {
+  showGameOver(reason: string, score: number): void {
     this.reasonEl.textContent = reason === 'tilt'
       ? 'The platform tipped over'
       : reason === 'timeout'
       ? 'Too slow!'
       : 'A block hit the ground';
-    this.gameOverScoreEl.textContent = String(this.currentScore);
+    this.gameOverScoreEl.textContent = String(score);
+    this.currentScore = score;
     this.overlayEl.classList.add('visible');
     this.restartBtn.style.display = 'inline-block';
     this.scoreSubmitSection.style.display = '';
@@ -179,6 +180,17 @@ export class UIManager {
       this.leaderboardList.appendChild(li);
     }
     this.leaderboardSection.style.display = '';
+  }
+
+  showStartLeaderboard(entries: LeaderboardEntry[]): void {
+    const list = document.getElementById('start-lb-list')!;
+    if (!list) return;
+    list.innerHTML = '';
+    for (const e of entries) {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="lb-rank">#${e.rank}</span><span class="lb-name">${escapeHtml(e.name)}</span><span class="lb-score">${e.score}</span>`;
+      list.appendChild(li);
+    }
   }
 
   triggerFlash(): void {

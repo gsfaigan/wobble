@@ -41,7 +41,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (cleanName.length === 0) {
       return res.status(400).json({ error: 'Invalid name' });
     }
-    if (filter.isProfane(cleanName)) {
+    const normalize = (s: string) => s
+      .replace(/0/g, 'o').replace(/1/g, 'i').replace(/3/g, 'e')
+      .replace(/4/g, 'a').replace(/5/g, 's').replace(/\$/g, 's')
+      .replace(/7/g, 't').replace(/@/g, 'a');
+
+    if (filter.isProfane(cleanName) || filter.isProfane(normalize(cleanName))) {
       return res.status(400).json({ error: 'Inappropriate name — please choose another' });
     }
 

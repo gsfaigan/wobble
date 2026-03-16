@@ -242,35 +242,7 @@
       margin-bottom: 20px;
     }
 
-    #leaderboard-title {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.4);
-      margin: 0 0 12px;
-      text-align: center;
-    }
-
-    #leaderboard-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    #leaderboard-list li {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 13px;
-      background: rgba(255,255,255,0.04);
-    }
+    #leaderboard-title { margin: 0 0 12px; }
 
     #leaderboard-list li.you {
       background: rgba(255,255,255,0.1);
@@ -405,6 +377,41 @@
     }
 
     #start-btn:active { transform: translateY(0); }
+
+    #start-leaderboard {
+      margin-top: 32px;
+      text-align: left;
+    }
+
+    .leaderboard-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin: 0 0 12px;
+      text-align: center;
+    }
+
+    .leaderboard-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .leaderboard-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      background: rgba(255,255,255,0.04);
+    }
 
     #controls-hint {
       position: absolute;
@@ -615,6 +622,10 @@
           <span class="hint-key">R</span> rotate
         </div>
         <button id="start-btn">PLAY</button>
+        <div id="start-leaderboard">
+          <h3 class="leaderboard-title">Top 10</h3>
+          <ol id="start-lb-list" class="leaderboard-list"></ol>
+        </div>
       </div>
     </div>
 
@@ -634,8 +645,8 @@
         </div>
 
         <div id="leaderboard-section" style="display:none;">
-          <h3 id="leaderboard-title">Top 10</h3>
-          <ol id="leaderboard-list"></ol>
+          <h3 id="leaderboard-title" class="leaderboard-title">Top 10</h3>
+          <ol id="leaderboard-list" class="leaderboard-list"></ol>
         </div>
 
         <button id="restart-btn">PLAY AGAIN</button>

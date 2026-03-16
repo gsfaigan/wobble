@@ -77,6 +77,11 @@ export class GameManager {
 
     window.addEventListener('resize', () => this.scene.onResize());
 
+    fetch('/api/scores')
+      .then(r => r.json())
+      .then((entries: LeaderboardEntry[]) => this.ui.showStartLeaderboard(entries))
+      .catch(() => {});
+
     this._init(); // sets up scene, physics, loop — paused until beginPlay()
   }
 
@@ -363,14 +368,15 @@ export class GameManager {
     this.scene.triggerShake(0.45);
     this.ui.triggerFlash();
 
-    setTimeout(() => this.ui.showGameOver(reason), 2200);
+    const scoreSnapshot = this.score;
+    setTimeout(() => this.ui.showGameOver(reason, scoreSnapshot), 2200);
   }
 
   triggerGameOver(reason: string): void {
     this.gameActive = false;
     this.inputSystem.setActive(false);
     this.ghostBlock.setVisible(false);
-    this.ui.showGameOver(reason);
+    this.ui.showGameOver(reason, this.score);
   }
 
   loop(timestamp: number): void {
