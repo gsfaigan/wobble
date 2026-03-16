@@ -40,6 +40,7 @@ export class GameManager {
   private readonly PLACE_TIMEOUT_MS = 20000;
   private _mousePos: THREE.Vector3 = new THREE.Vector3(0, DROP_HEIGHT, 0);
   private _rafId: number = 0;
+  private _gameOverTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
@@ -59,13 +60,13 @@ export class GameManager {
         });
         if (!res.ok) {
           const { error } = await res.json();
-          this.ui.showSubmitStatus(error ?? 'Could not save score — try again.');
+          this.ui.showSubmitStatus(error ?? 'Could not save score — try again.', true);
           return;
         }
         const entries: LeaderboardEntry[] = await fetch('/api/scores').then(r => r.json());
         this.ui.showLeaderboard(entries, this.score);
       } catch {
-        this.ui.showSubmitStatus('Could not save score — try again.');
+        this.ui.showSubmitStatus('Could not save score — try again.', true);
       }
     });
     this.ui.onPause(
@@ -114,6 +115,12 @@ export class GameManager {
   }
 
   start(): void {
+    // Cancel any pending game-over screen from a previous explosion
+    if (this._gameOverTimeoutId !== null) {
+      clearTimeout(this._gameOverTimeoutId);
+      this._gameOverTimeoutId = null;
+    }
+
     // Clean up any active explosion
     if (this._explosion) {
       this._explosion.dispose(this.scene.scene);
@@ -369,7 +376,10 @@ export class GameManager {
     this.ui.triggerFlash();
 
     const scoreSnapshot = this.score;
-    setTimeout(() => this.ui.showGameOver(reason, scoreSnapshot), 2200);
+    this._gameOverTimeoutId = setTimeout(() => {
+      this._gameOverTimeoutId = null;
+      this.ui.showGameOver(reason, scoreSnapshot);
+    }, 2200);
   }
 
   triggerGameOver(reason: string): void {

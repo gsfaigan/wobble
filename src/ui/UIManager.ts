@@ -165,8 +165,9 @@ export class UIManager {
     });
   }
 
-  showSubmitStatus(msg: string): void {
+  showSubmitStatus(msg: string, reEnableSubmit = false): void {
     this.submitStatus.textContent = msg;
+    if (reEnableSubmit) this.submitScoreBtn.disabled = false;
   }
 
   showLeaderboard(entries: LeaderboardEntry[], playerScore: number): void {
