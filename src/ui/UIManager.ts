@@ -1,5 +1,11 @@
 const TIMER_CIRCUMFERENCE = 163.36; // 2π × r26
 
+export interface LeaderboardEntry {
+  name: string;
+  score: number;
+  rank: number;
+}
+
 export class UIManager {
   private scoreEl: HTMLElement;
   private overlayEl: HTMLElement;
@@ -15,6 +21,12 @@ export class UIManager {
   private timerCard: HTMLElement;
   private timerRing: SVGCircleElement;
   private timerVal: HTMLElement;
+  private scoreSubmitSection: HTMLElement;
+  private playerNameInput: HTMLInputElement;
+  private submitScoreBtn: HTMLButtonElement;
+  private submitStatus: HTMLElement;
+  private leaderboardSection: HTMLElement;
+  private leaderboardList: HTMLElement;
 
   private currentScore: number = 0;
   private _lastTimerSecs = -1;
@@ -37,9 +49,15 @@ export class UIManager {
     this.resumeBtn       = document.getElementById('resume-btn') as HTMLButtonElement;
     this.musicSlider     = document.getElementById('music-vol') as HTMLInputElement;
     this.sfxSlider       = document.getElementById('sfx-vol') as HTMLInputElement;
-    this.timerCard       = document.getElementById('timer-card')!;
-    this.timerRing       = document.getElementById('timer-ring') as unknown as SVGCircleElement;
-    this.timerVal        = document.getElementById('timer-val')!;
+    this.timerCard           = document.getElementById('timer-card')!;
+    this.timerRing           = document.getElementById('timer-ring') as unknown as SVGCircleElement;
+    this.timerVal            = document.getElementById('timer-val')!;
+    this.scoreSubmitSection  = document.getElementById('score-submit-section')!;
+    this.playerNameInput     = document.getElementById('player-name') as HTMLInputElement;
+    this.submitScoreBtn      = document.getElementById('submit-score-btn') as HTMLButtonElement;
+    this.submitStatus        = document.getElementById('submit-status')!;
+    this.leaderboardSection  = document.getElementById('leaderboard-section')!;
+    this.leaderboardList     = document.getElementById('leaderboard-list')!;
   }
 
   private _openPause!: () => void;
@@ -117,12 +135,50 @@ export class UIManager {
     this.gameOverScoreEl.textContent = String(this.currentScore);
     this.overlayEl.classList.add('visible');
     this.restartBtn.style.display = 'inline-block';
+    this.scoreSubmitSection.style.display = '';
+    this.leaderboardSection.style.display = 'none';
+    this.submitStatus.textContent = '';
+    this.playerNameInput.value = '';
+    this.submitScoreBtn.disabled = false;
+    setTimeout(() => this.playerNameInput.focus(), 50);
   }
 
   hideGameOver(): void {
     this.overlayEl.classList.remove('visible');
     this.overlayEl.style.display = '';
     this.restartBtn.style.display = 'none';
+    this.scoreSubmitSection.style.display = 'none';
+    this.leaderboardSection.style.display = 'none';
+  }
+
+  onSubmitScore(cb: (name: string) => void): void {
+    const submit = () => {
+      const name = this.playerNameInput.value.trim();
+      if (!name) { this.playerNameInput.focus(); return; }
+      this.submitScoreBtn.disabled = true;
+      cb(name);
+    };
+    this.submitScoreBtn.addEventListener('click', submit);
+    this.playerNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submit();
+    });
+  }
+
+  showSubmitStatus(msg: string): void {
+    this.submitStatus.textContent = msg;
+  }
+
+  showLeaderboard(entries: LeaderboardEntry[], playerScore: number): void {
+    this.scoreSubmitSection.style.display = 'none';
+    this.leaderboardList.innerHTML = '';
+    for (const e of entries) {
+      const li = document.createElement('li');
+      const isYou = e.score === playerScore;
+      if (isYou) li.classList.add('you');
+      li.innerHTML = `<span class="lb-rank">#${e.rank}</span><span class="lb-name">${escapeHtml(e.name)}${isYou ? ' ▶' : ''}</span><span class="lb-score">${e.score}</span>`;
+      this.leaderboardList.appendChild(li);
+    }
+    this.leaderboardSection.style.display = '';
   }
 
   triggerFlash(): void {
@@ -138,4 +194,8 @@ export class UIManager {
   onRestart(cb: () => void): void {
     this.restartBtn.addEventListener('click', cb);
   }
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

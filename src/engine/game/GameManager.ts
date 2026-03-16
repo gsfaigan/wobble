@@ -7,7 +7,7 @@ import { BlockFactory, PlacedBlock } from './BlockFactory';
 import { GhostBlock } from './GhostBlock';
 import { InputSystem } from './InputSystem';
 import { GameOverDetector } from './GameOverDetector';
-import { UIManager } from '../../ui/UIManager';
+import { UIManager, LeaderboardEntry } from '../../ui/UIManager';
 import { AudioManager } from './AudioManager';
 import { ExplosionEffect } from './ExplosionEffect';
 import { SHAPE_KEYS, PLATFORM_WIDTH, PLATFORM_DEPTH, DROP_HEIGHT, COL_BLOCK } from './constants';
@@ -49,6 +49,20 @@ export class GameManager {
 
     this.ui.onStart(() => this.beginPlay());
     this.ui.onRestart(() => this.start());
+    this.ui.onSubmitScore(async (name) => {
+      this.ui.showSubmitStatus('Submitting…');
+      try {
+        await fetch('/api/scores', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, score: this.score }),
+        });
+        const entries: LeaderboardEntry[] = await fetch('/api/scores').then(r => r.json());
+        this.ui.showLeaderboard(entries, this.score);
+      } catch {
+        this.ui.showSubmitStatus('Could not save score — try again.');
+      }
+    });
     this.ui.onPause(
       () => { this.inputSystem.setActive(false); },
       () => { if (this.gameActive) this.inputSystem.setActive(true); },

@@ -179,6 +179,130 @@
       line-height: 1;
     }
 
+    /* ── Leaderboard ── */
+    #score-submit-section {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    #name-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #player-name {
+      flex: 1;
+      max-width: 180px;
+      padding: 10px 14px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 50px;
+      color: #fff;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    #player-name::placeholder { color: rgba(255,255,255,0.3); }
+    #player-name:focus { border-color: rgba(255,255,255,0.45); }
+
+    #submit-score-btn {
+      pointer-events: all;
+      padding: 10px 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, #555, #333);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    #submit-score-btn:hover { background: linear-gradient(135deg, #666, #444); transform: translateY(-1px); }
+    #submit-score-btn:active { transform: translateY(0); }
+    #submit-score-btn:disabled { opacity: 0.45; cursor: default; transform: none; }
+
+    #submit-status {
+      font-size: 12px;
+      color: rgba(255,255,255,0.45);
+      margin: 8px 0 0;
+      min-height: 16px;
+      text-align: center;
+    }
+
+    #leaderboard-section {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    #leaderboard-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin: 0 0 12px;
+      text-align: center;
+    }
+
+    #leaderboard-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    #leaderboard-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      background: rgba(255,255,255,0.04);
+    }
+
+    #leaderboard-list li.you {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .lb-rank {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      width: 22px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .lb-name {
+      flex: 1;
+      color: rgba(255,255,255,0.85);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .lb-score {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #e8e8e8;
+      flex-shrink: 0;
+    }
+
     #restart-btn {
       pointer-events: all;
       padding: 14px 44px;
@@ -500,6 +624,20 @@
         <div id="game-over-reason"></div>
         <div id="game-over-score-label">Final Score</div>
         <div id="game-over-score-value" id="message-text">0</div>
+
+        <div id="score-submit-section">
+          <div id="name-row">
+            <input id="player-name" type="text" maxlength="20" placeholder="Enter your name" autocomplete="off" spellcheck="false" />
+            <button id="submit-score-btn">Submit</button>
+          </div>
+          <p id="submit-status"></p>
+        </div>
+
+        <div id="leaderboard-section" style="display:none;">
+          <h3 id="leaderboard-title">Top 10</h3>
+          <ol id="leaderboard-list"></ol>
+        </div>
+
         <button id="restart-btn">PLAY AGAIN</button>
       </div>
     </div>
