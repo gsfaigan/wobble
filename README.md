@@ -5,8 +5,9 @@ A browser-based physics game where you stack Tetris-shaped blocks on a rocking p
 ## How to Play
 
 - Drag and drop blocks onto the platform
-- The platform tilts under the weight — balance your placements
-- Game ends when the platform tilts past 45° or a block falls off
+- You can rotate them as well
+- The platform tilts under the weight so balance your placements
+- Game ends when a block falls off
 
 ## Tech Stack
 
